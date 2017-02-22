@@ -82,7 +82,16 @@ sub login {
   }
   my $provider = $r->param($self->{PROVIDER_NAME});
   $self->warn("{CGIController}[Name]{provider}$provider");
-  my $ticket = $t->{$provider} || $t->{"db"} || $t->{"plain"};
+  unless ($provider) {
+    while (my ($k, $v) = each %$t) {
+      $provider = $k;
+      if ($v->default()) {
+        last;
+      }
+    }
+  }  
+  #my $ticket = $t->{$provider} || $t->{"db"} || $t->{"plain"};
+  my $ticket = $t->{$provider};
   unless ($ticket) {
     $self->warn("{CGIController}[OK]{fail}1");
     $self->send_status_page(404, "Ticket Case Not Found");
@@ -140,6 +149,18 @@ sub run {
     return $self->send_status_page(200);
   }
 
+  my $method_found = 0;
+  for my $k (keys %{$self->{DEFAULT_ACTIONS}}) {
+    if ($ENV{REQUEST_METHOD} eq $k) {
+      $method_found = 1;
+      last;
+    }
+  }
+  if (!$method_found) {
+    $self->send_status_page(404, "Wrong Request Method");
+    return;
+  }
+
   return $self->check404() if ($ENV{REDIRECT_STATUS} && $ENV{REDIRECT_STATUS} eq '404');
   unless ($ENV{PATH_INFO}) {
     $self->send_status_page(404, "Wrong URL");
@@ -147,7 +168,9 @@ sub run {
   }
 
   (undef, my @path_info) = split /\//, $ENV{PATH_INFO}, -1;
-  unless (@path_info==3) {
+  if (@path_info==4 and $ENV{REQUEST_METHOD} eq "GET") {
+    $r->param(-name=>"_gid_url", -value=>$path_info[3]);
+  } elsif (@path_info!=3) {
     $self->send_status_page(404, "Wrong URL");
   }
 

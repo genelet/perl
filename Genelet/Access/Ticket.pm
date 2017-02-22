@@ -22,6 +22,7 @@ __PACKAGE__->setup_accessors(
   def_extention => "html",
   def_login     => "hello",
   def_password  => "world",
+  default       => 0,
 
   attributes  => undef,
   out_pars    => undef,

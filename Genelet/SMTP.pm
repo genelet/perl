@@ -11,7 +11,7 @@ sub send_mail {
   return 1060 unless ($pars->{Server} && $pars->{From} && $pars->{To} && $pars->{Subject});
 
   my ($server, $port) = split /:/, $pars->{Server};
-  $smtp ||= Net::SMTP->new($server, Port=>($port||25), Hello=>$pars->{Hello}, Debug=>$pars->{Debug}) or return [1063, $!];
+  $smtp ||= Net::SMTP->new($server, Port=>($port||25), Hello=>$pars->{Hello}, SSL=>$pars->{SSL}, Debug=>$pars->{Debug}) or return [1063, $!];
   $smtp->auth(split(/,/, $pars->{Auth})) if ($pars->{Auth});
   $smtp->mail($pars->{Sender});
   $smtp->to($pars->{To});

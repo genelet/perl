@@ -111,7 +111,8 @@ sub filter {
 	my $self = shift;
 	my $PROJECT = ucfirst(lc $self->{PROJECT});
 	my $CLS     = $self->{CLS};
-	my $groups  = ($self->{TABLE} eq $self->{ACCOUNT}) ? "groups=>['public'], no_method=>1, no_db=>1" : "";	
+	my $groups  = ($self->{TABLE} eq $self->{ACCOUNT}) ? "groups=>['public'], " : "";
+	$groups .= "no_method=>1, no_db=>1";	
 	return qq`package $PROJECT`.qq`::$CLS`.qq`::Filter;
 
 use strict;
@@ -255,12 +256,15 @@ sub topics {
 	my $pk = $self->{PK};
 	my $obj = $self->{OBJ};
 
+	my @fields = @{$self->{FIELDS}};
+	unshift(@fields, $pk) if ($pk eq $self->{AK});
+
 	my $str = qq`<h3>List of Records</h3>
 <table>
 <thead>
 <tr>
 `;
-	for my $val (@{$self->{FIELDS}}) {
+	for my $val (@fields) {
         $str .= qq`<th>`.$nice->($val).qq`</th>
 `;
     }
@@ -269,7 +273,7 @@ sub topics {
 <tbody>[% FOREACH item IN topics %]
 <tr>
 `;
-	for my $val (@{$self->{FIELDS}}) {
+	for my $val (@fields) {
 		$str .= ($pk eq $val )?
 qq`<td><a href="$obj?action=edit&$pk=[% item.$pk %]">[% item.$pk %]</a></td>
 ` :

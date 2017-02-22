@@ -192,22 +192,13 @@ sub config {
 	my ($name, $user, $pass) = @_;
 	my $root = $self->{ROOT};
 
-	my @arr;
-	for my $t (@{$self->{TABLES}}) {
-		my ($obj, $cls) = $self->_objcls($t);
-		push @arr, $cls;
-	}
-	my $comp = '"'.join('", "', @arr).'"';
-	
 	return qq`{
 	"Document_root" : "$root/www",
 	"Project"  : "`.ucfirst($self->{PROJECT}).qq`",
-	"Script_name"   : "`.$self->{SCRIPT}.qq`",
+	"Script"   : "`.$self->{SCRIPT}.qq`",
 	"Template"      : "$root/views",
 	"Pubrole"       : "public",
 	"Secret"        :"sf09i51jlbnd0324e;fn 340913i5i13vtnsdkvn akUIUUIHKJHV",
-	"Fcgi": 0,
-	"Components": [$comp],
 	"Chartags"      : {
 		"html" : {
 			"Content_type":"text/html; charset='UTF-8'",
@@ -259,9 +250,16 @@ sub config {
 sub script {
 	my $self = shift;
 
+	my @arr;
+	for my $t (@{$self->{TABLES}}) {
+		my ($obj, $cls) = $self->_objcls($t);
+		push @arr, $cls;
+	}
+    my $comp = '"'.join('", "', @arr).'"';
+
 	return qq`#!/usr/bin/perl
 
-use lib qw(`.$self->{ROOT}.qq`/lib);
+use lib qw(`.$self->{ROOT}.qq`);
 
 use strict;
 use JSON;
@@ -280,7 +278,7 @@ use Template;
 
 use Genelet::Dispatch;
 
-Genelet::Dispatch::run("`.$self->{ROOT}.qq`/conf/config.json");
+Genelet::Dispatch::run("`.$self->{ROOT}.qq`/conf/config.json", [$comp]);
 
 exit;
 `;
@@ -365,8 +363,7 @@ sub public {
 	my $self = shift;
 	my ($obj, $cls) = $self->_objcls($self->{ACCOUNT});
 	
-	return qq`<h4><a href="/#/admin/$obj?action=topics">Enter Admin (AngularJS)</a></h4>
-<h4><a href="`.$self->{SCRIPT}.qq`/admin/html/$obj?action=topics">Enter Admin (Server Side)</a></h4>
+	return qq`<h4><a href="`.$self->{SCRIPT}.qq`/admin/html/$obj?action=topics">Enter Admin (Server Side)</a></h4>
 `;
 }
 

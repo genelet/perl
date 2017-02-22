@@ -37,14 +37,14 @@ use vars qw(%CONTROLLER %DEBUG %ERRORS %ROUTES %ACCESSES);
 
 sub init {
   my $config = shift;
+  my $Components = shift;
+  my $Fcgi = shift;
+  my $Post_max = shift || 1024*1024*3;
 
-  $config->{Post_max} ||= 1024*1024*3;
-  $config->{Fcgi}     ||= 1;
-
-  my $cgi = ($config->{Fcgi}) ? "CGI::Fast" : "CGI";
+  my $cgi = ($Fcgi) ? "CGI::Fast" : "CGI";
   eval "use $cgi qw(:cgi)";
   die $@ if $@;
-  $CGI::POST_MAX = $config->{Post_max};
+  $CGI::POST_MAX = $Post_max;
 
   my $error = "";
   my $PROJECT = $config->{Project} or die "project name must be defined";
@@ -52,7 +52,7 @@ sub init {
     my $m = $PROJECT."::$mf";
     eval "require $m";
     $error .= $@ if ($@);
-    for (@{$config->{Components}}) {
+    for (@{$Components}) {
       my $f = $PROJECT."::".$_."::$mf";
       eval "require $f";
       $error .= $@ if ($@);
@@ -62,8 +62,9 @@ sub init {
   $logger->emergency($error) if ($logger && $error);
 
   my %base = (env=>\%ENV);
-  for (qw(Template Pubrole Secret Project Document_root Script_name Action_name Default_action Role_name Plain_provider Google_provider Login_name Logout_name Tag_name Provider_name Callback_name Go_uri_name Go_probe_name Go_err_name Db Blks Chartags Errors Static Storage)) {
-    $base{lc $_} = $config->{$_} if $config->{$_};
+  for my $key (keys %$config) {
+    next if ($key eq "Roles");
+    $base{lc $_} = $config->{$_}
   }
   $base{logger} = $logger if $logger;
   
@@ -86,18 +87,15 @@ Logout Domain Path Max_age)) {
       my %last;
       $last{attributes} = $item->{Attributes};
       $last{provider} = $provider;
-      #for (qw(Default Screen Sql Sql_as Provider_pars Credential In_pars Out_pars)) {
       for (qw(Default Screen Sql Sql_as Credential In_pars Out_pars)) {
         $last{lc $_} = $issuer->{$_} if $issuer->{$_}; 
       }
-      if ($provider ne 'db' || $provider ne $base{Plain_provider}) {
-		if ($issuer->{Provider_pars}) {
-			foreach my $k (keys %{$issuer->{Provider_pars}}) {
-				$last{lc $k} = $issuer->{Provider_pars}->{$k}
-			}
+      push @$remotes, $provider if ($provider ne 'db' and $provider ne "plain");
+      if ($issuer->{Provider_pars}) {
+        while (my ($k, $v) = each %{$issuer->{Provider_pars}}) {
+          $last{lc $k} = $v;
 		}
-        push @$remotes, $provider;
-      }
+	  }
       my $m = "Genelet::CGIAccess::".ucfirst($provider);
       eval "require $m";
       $error .= $@ if ($@);
@@ -134,9 +132,9 @@ sub run {
     die "No configuration." unless $config;
   }
 
-  my ($cgi, $c) = init($config);
+  my ($cgi, $c) = init($config, @_);
 
-  unless ($config->{Fcgi}) {
+  unless ($Fcgi) {
     $c->r($cgi->new());
     return $c->run();
   }
@@ -150,7 +148,17 @@ sub run {
 }
 
 sub run_test {
-  my ($cgi, $c) = init(@_);
+  my $config = shift;
+  unless (ref($config) eq 'HASH') {
+    local $/;
+    open( my $fh, '<', $config) or die $!;
+    my $json_text = <$fh>;
+    close($fh);
+    $config = decode_json( $json_text );
+    die "No configuration." unless $config;
+  }
+
+  my ($cgi, $c) = init($config, @_);
 
   open my $saved_stdout, ">&STDOUT" or die "Can't dup STDOUT: $!";
   close STDOUT;

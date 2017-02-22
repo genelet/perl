@@ -11,7 +11,7 @@ use Genelet::Helper::Angular;
 
 my $force   = "";
 my $angular = "";
-my $dir     = $ENV{HOME}."/helper";
+my $dir     = $ENV{HOME}."/geneletperl";
 my $dbuser  = "";
 my $dbpass  = "";
 my $dbname  = "";
@@ -21,9 +21,9 @@ my $script  = "myscript";
 
 my $usage = sub {
 	return "Usage: $0 [options] table1 table2 ...
-	--dir    program root, default '\$HOME/genelet'
+	--dir    program root, default '\$HOME/geneletperl'
 	--dbtype  database type 'sqlite' or 'mysql', default 'mysql'
-	--dbname  database name, mendatory
+	--dbname  database name, mandatory
 	--dbuser  database username, default ''
 	--dbpass  database password, default ''
 	--project project name, default to 'myproject'

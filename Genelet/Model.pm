@@ -24,62 +24,41 @@ __PACKAGE__->setup_accessors(
   current_id_auto=>undef, # an auto increment field name
 
   topics_pars   => undef, # topics, select, search etc. starts here
-  total_force   => 0,     # <-1, abs is the maximal no.; -1, call total;
-  # >0 call only if no total; 0 or undef to disable calculation
+  total_force   => 0,     # no total rows returned; 1 yes, if not in query
   sortby        => "sortby",      # default sort according to field_key
   sortreverse   => "sortreverse", # if not null then reverse sort
   pageno        => "pageno",      # e.g. "pageno"
   rowcount      => "rowcount",    # e.g. "rowcount"
   totalno       => "totalno",     # e.g. "totalno"
-  max_pageno    => "max_pageno",  # e.g. "max_pageno"
+  maxpageno     => "maxpageno",  # e.g. "max_pageno"
   field         => "field", 
 
   edit_pars     => undef, # edit
   update_pars   => undef, # update
-  empty_name    => 'empties',
+  empties       => 'empties',
 
   current_insupd=> undef, # insert updater uniques
-  current_keymul=> undef, # delete only, if none exist, use current_key
   key_in        => undef, # delete only, stop if key in other tables
-
-  current_fk    => undef, # fk, used in delete_by_fk only
 );
 
 my $filtered_fields = sub {
   my ($in, $ref) = @_;
   return $ref unless $in;
 
-  if (ref($in) eq 'ARRAY') {
-    my $out = [];
-    for my $item (@$in) {
-      push(@$out, $item) if (grep {$item eq $_} @$ref);
-    }
-    return $out;
-  } elsif (grep {$in eq $_} @$ref) {
-    return $in;
-  } else {
-    return $ref;
+  my @as = split ',', $in, -1;
+  my $out = [];
+  for my $item (@as) {
+    push(@$out, $item) if (grep {$item eq $_} @$ref);
   }
+  return (@$out) ? $out : $ref;
 };
 
 my $get_fv = sub {
-  my $F = shift;
   my $args = shift;
   my $pars = shift;
 
   my $field_values;
-  if (defined $args->{$F}) {
-    my $field = $args->{$F};
-    if (ref($field) eq 'ARRAY') {
-      for my $f (@$field) {
-        my $v = $args->{$_};
-        $field_values->{(ref($pars) eq 'HASH') ? $pars->{$f} : $f} = $v if defined($v);
-      }
-    } else {
-      my $v = $args->{$field};
-      $field_values->{(ref($pars) eq 'HASH') ? $pars->{$field} : $field} = $v if defined($v);
-    }
-  } elsif (ref($pars) eq 'HASH') {
+  if (ref($pars) eq 'HASH') {
     # key is from web page, value is real table column
     while (my ($k, $v) = each %$pars) {
       $field_values->{$v} = $args->{$k} if defined($args->{$k});
@@ -256,14 +235,12 @@ sub topics {
   my $totalno = $self->{TOTALNO};
   my $pageno  = $self->{PAGENO};
   if ($case && $ARGS->{$self->{ROWCOUNT}} && (!$ARGS->{$pageno} || $ARGS->{$pageno}==1)) {
-    if ($case < -1) {
-      $self->{OTHER}->{$totalno} = $ARGS->{$totalno} = abs($case);
-    } elsif ($case == -1 or !$ARGS->{$totalno}) {
+    unless ($ARGS->{$totalno}) {
       $self->{LISTS} = [];
       $err = $self->total_hash($self->{LISTS}, ['counts'], $extra) and return $err;
       $self->{OTHER}->{$totalno} = $ARGS->{$totalno} = $self->{LISTS}->[0]->{counts};
     }
-    $self->{OTHER}->{$self->{MAX_PAGENO}} = $ARGS->{$self->{MAX_PAGENO}} = int( ($ARGS->{$totalno}-1)/$ARGS->{$self->{ROWCOUNT}} )+1;
+    $self->{OTHER}->{$self->{MAXPAGENO}} = $ARGS->{$self->{MAXPAGENO}} = int( ($ARGS->{$totalno}-1)/$ARGS->{$self->{ROWCOUNT}} )+1;
   }
 
   my $fields = $filtered_fields->($ARGS->{$self->{FIELD}}, $self->{TOPICS_PARS});
@@ -277,7 +254,7 @@ sub topics {
 sub _get_id_val {
   my $self = shift;
   my $extra = shift;
-  my $id = $self->{CURRENT_KEYMUL} || $self->{CURRENT_KEY};
+  my $id = $self->{CURRENT_KEY};
 
   if (ref($id) eq 'ARRAY') {
     my $val;
@@ -306,10 +283,14 @@ sub edit {
   my $self = shift;
   my $extra = shift || {};
 
+  my $ARGS = $self->{ARGS};
+  if ($ARGS->{"_gid_url"}) {
+    $ARGS->{$self->{CURRENT_KEY}} = $ARGS->{"_gid_url"};
+  }
   my ($id, $val) = $self->_get_id_val($extra);
   return [1040, $id] unless defined($val);
       
-  my $fields = $filtered_fields->($self->{ARGS}->{$self->{FIELD}}, $self->{EDIT_PARS});
+  my $fields = $filtered_fields->($ARGS->{$self->{FIELD}}, $self->{EDIT_PARS});
 
   $self->{LISTS} = [];
   my $err = $self->edit_hash($self->{LISTS}, $fields, $id, $val, $extra);
@@ -323,7 +304,7 @@ sub insert {
   my $self = shift;
   my $extra = shift;
 
-  my $field_values = $get_fv->($self->{FIELD}, $self->{ARGS}, $self->{INSERT_PARS});
+  my $field_values = $get_fv->($self->{ARGS}, $self->{INSERT_PARS});
   if ($extra) { # to force some field_values
     while (my ($key, $value) = each %$extra) {
       if (ref($self->{INSERT_PARS}) eq 'HASH') {
@@ -346,6 +327,12 @@ sub insert {
   return $self->process_after('insert', @_);
 }
 
+sub last_insertid {
+  my $self = shift;
+
+  return $self->{DBH}->last_insert_id(undef, undef, $self->{CURRENT_TABLE}, $self->{CURRENT_ID_AUTO});
+}
+
 sub insupd {
   my $self = shift;
   my $extra = shift;
@@ -353,7 +340,7 @@ sub insupd {
   my $uniques = $self->{CURRENT_INSUPD};
   return 1078 unless $uniques;
 
-  my $field_values = $get_fv->($self->{FIELD}, $self->{ARGS}, $self->{INSERT_PARS});
+  my $field_values = $get_fv->($self->{ARGS}, $self->{INSERT_PARS});
   if ($extra) { # to force some field_values
     while (my ($key, $value) = each %$extra) {
       if (ref($self->{INSERT_PARS}) eq 'HASH') {
@@ -375,7 +362,7 @@ sub insupd {
     return 1078 unless defined($field_values->{$uniques});
   }
 
-  my $upd_field_values = $get_fv->($self->{FIELD}, $self->{ARGS}, $self->{UPDATE_PARS});
+  my $upd_field_values = $get_fv->($self->{ARGS}, $self->{UPDATE_PARS});
 
   
   my $s_hash = '';
@@ -395,7 +382,7 @@ sub update {
   my ($id, $val) = $self->_get_id_val($extra);
   return [1040, $id] unless defined($val);
 
-  my $field_values = $get_fv->($self->{FIELD}, $self->{ARGS}, $self->{UPDATE_PARS});
+  my $field_values = $get_fv->($self->{ARGS}, $self->{UPDATE_PARS});
   return 1077 unless $field_values;
   if (scalar(keys %$field_values)==1 and defined($field_values->{$id})) {
     $self->{LISTS} = [$field_values];
@@ -403,8 +390,8 @@ sub update {
   }
 
   my $empties;
-  if ($self->{EMPTY_NAME} and $self->{ARGS}->{$self->{EMPTY_NAME}}) {
-    my @a = split ',', $self->{ARGS}->{$self->{EMPTY_NAME}}, -1;
+  if ($self->{EMPTIES} and $self->{ARGS}->{$self->{EMPTIES}}) {
+    my @a = split ',', $self->{ARGS}->{$self->{EMPTIES}}, -1;
     for (@a) {
       $_ =~ s/^\s+//g;
       $_ =~ s/\s+$//g;
@@ -426,23 +413,6 @@ sub update {
   $self->{LISTS} = [$field_values];
 
   return $self->process_after('update', @_);
-}
-
-sub delete_by_fk {
-  my $self = shift;
-  my $extra = shift || {};
-
-  my $id = $self->{CURRENT_FK};
-  my $val = $extra->{$id};
-  return [1040, $id] unless defined($val);
-  delete $extra->{$id};
-
-  my $err = $self->delete_hash($id, $val, $extra);
-  return $err if $err;
-
-  $self->{LISTS} = [{$id=>$val}];
-
-  return $self->process_after('delete_by_fk', @_);
 }
 
 sub existing {
@@ -525,9 +495,8 @@ sub get_order_string {
   my $ARGS = $self->{ARGS};
   my $column = $ARGS->{$self->{SORTBY}};
   unless ($column) {
-    $column = (ref($self->{CURRENT_KEY}) eq 'ARRAY')
-	? join(',', @{$self->{CURRENT_KEY}})
-	: $self->{CURRENT_KEY};
+    return "";
+#    $column = (ref($self->{CURRENT_KEY}) eq 'ARRAY') ? join(',', @{$self->{CURRENT_KEY}}) : $self->{CURRENT_KEY};
   }
   $column = ($self->{CURRENT_TABLES}->[0]->{alias} || $self->{CURRENT_TABLES}->[0]->{name}) . ".$column" if ($self->{CURRENT_TABLES} && $column !~ /\./);
   my $order = "ORDER BY $column";

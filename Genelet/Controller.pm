@@ -18,7 +18,7 @@ __PACKAGE__->setup_accessors(
   escape_esc => 1,
   roles      => {},
   shadows    => undef,
-  components => [],
+  default_actions => undef,
 
   json_lib   => 1,
   xtags      => {json=>'json', jsonp=>'jsonp', form=>'form', xml=>'xml'},
@@ -148,12 +148,12 @@ sub handler {
   $self->warn("{Controller}[Filter]{start}1");
   my $filter = $name->new(gate=>$gate, map {($_, $self->{uc $_})} 
 	qw(document_root script_name secret template blks errors storage 
-	dbis ua logger dbis r));
+	dbis ua logger dbis r default_actions));
   return $self->send_status_page(404) unless $filter;
   $self->warn("{Controller}[Filter]{end}1");
  
   my ($action, $actionHash) = $filter->get_action($self->{ACTION_NAME});
-  return $self->send_status_page(404) unless $action;
+  return $self->send_status_page(404) unless ($action && $actionHash);
   $self->warn("{Controller}[Name]{action}".$action);
 
   my $ARGS;
@@ -188,10 +188,10 @@ sub handler {
   }
   $ARGS->{_guri}   = $pathinfo;
   $ARGS->{_gwho}   = $ARGS->{g_role} = $who;
-  $ARGS->{_gtag}   = $tag;
+  $ARGS->{_gtag}   = $ARGS->{g_tag} = $tag;
   $ARGS->{_gview}  = $self->{XTAGS}->{$tag};
   $ARGS->{_gobj}   = $ARGS->{g_component} = $obj;
-  $ARGS->{_gaction}= $action;
+  $ARGS->{_gaction}= $ARGS->{g_action} = $action;
   $ARGS->{_gmime}  = $self->{CHARTAGS}->{$tag}->{"Content_type"};
   $r->{"headers_out"}->{"Content-Type"} = $ARGS->{_gmime};
   $ARGS->{_gtype}      = $self->{CHARTAGS}->{$tag}->{Short};
@@ -202,21 +202,19 @@ sub handler {
   $ARGS->{g_server}    = $self->get_servername();
   $ARGS->{_gidname}    = undef;
   $ARGS->{_gadmin}     = undef; 
-  $ARGS->{_graw}       = undef;
   my %hash;
   if (my $role = $self->{ROLES}->{$who}) {
     my $auth = $gate->auth() if $gate;
     return $self->send_status_page(401) unless $auth;
     $ARGS->{_gidname} = $role->{id_name};
     $ARGS->{_gadmin}  = $role->{is_admin};
+    $ARGS->{_gtype_id}= $role->{type_id};
     %hash = $self->authhash($who, $auth);
     $ARGS->{_gauthkeys} = [keys %hash];
     $ARGS->{$_} = $hash{$_} for @{$ARGS->{_gauthkeys}};
     $ARGS->{_gtime} = $auth->{'X-Forwarded-Request_Time'};
     $ARGS->{_gwhen} = $auth->{'X-Forwarded-Time'};
     $ARGS->{_gduration} = $auth->{'X-Forwarded-Duration'};
-    $ARGS->{_ggroup}= $auth->{'X-Forwarded-Group'};
-    $ARGS->{_graw}  = $auth->{'X-Forwarded-Raw'};
   } elsif ($self->{SHADOWS} && (my $real_who = $self->{SHADOWS}->{$who})) {
     my $auth = $gate->auth() if $gate;
     return $self->send_status_page(401) unless $auth;
@@ -252,11 +250,11 @@ sub handler {
     $self->warn("{Controller}[Upload]{start}1");
     while (my ($field, $value) = each %{$actionHash->{upload}}) {
       my $field_new = shift @$value;
-      $ARGS->{$field_new} = $self->upload_field($r, $field, @$value);
-      unless ($ARGS->{$field_new}) {
-        $self->warn("{Controller}[Upload]{end}1:$field");
-		return $self->error_page($filter, $ARGS, [1045, $field]);
-      }
+      $ARGS->{$field_new} = ($value) ? $self->upload_field($r, $field, @$value) : $self->upload_field($r, $field);
+      #unless ($ARGS->{$field_new}) {
+      #  $self->warn("{Controller}[Upload]{end}1:$field");
+	  #  return $self->error_page($filter, $ARGS, [1045, $field]);
+      #}
     }
     $self->warn("{Controller}[Upload]{end}1");
   }
@@ -351,7 +349,7 @@ sub handler {
 
   my $nextextras = [];
   $self->warn("{Controller}[Before]{start}1");
-  $error = $filter->before($dbh, $form, $extra, $nextextras);
+  $error = $filter->before($form, $extra, $nextextras);
   $self->warn("{Controller}[Before]{end}1:",$error);
   if ($error) {
     $dbh->disconnect if $dbh;
@@ -392,7 +390,7 @@ sub handler {
   }
 
   $self->warn("{Controller}[After]{start}1");
-  $error = $filter->after($form, $lists);
+  $error = $filter->after($form);
   $self->warn("{Controller}[After]{end}1:",$error);
   $dbh->disconnect if defined($dbh);
 

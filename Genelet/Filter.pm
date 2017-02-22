@@ -11,18 +11,19 @@ use vars qw(@ISA);
 @ISA = ('Genelet::Base');
 
 __PACKAGE__->setup_accessors(
-	default_action => 'dashboard',
+	default_actions => undef,
 	gate => undef,
 	dbis => undef,
 	args => undef,
 	actions => undef,
 	fks => undef,
 	escs => undef,
-    blks => undef,
+	blks => undef,
 	blocked    => {
 		mail => ['_gmail', 'send_mail'],
 		apns => ['_gapns', 'send_apns'],
-		sms  => ['_gsms', 'send_sms'],
+		gcm  => ['_ggcm',  'send_gcm'],
+		sms  => ['_gsms',  'send_sms'],
 	},
 );
 
@@ -30,33 +31,33 @@ sub send_blocks {
   my $self = shift;
   my ($lists, $other) = @_;
 
-  my $ARGS = $self->{ARGS};
   my $err;
 
   while (my ($MAIL, $value) = each %{$self->{BLOCKED}}) {
     my $gmail = $value->[0];
+    my $obj = $other->{$gmail};
     my $send  = $value->[1];
     my $pars = $self->{BLKS}->{$MAIL};
-    next unless ($pars && $ARGS->{$gmail});
-    foreach my $envelope ((ref($ARGS->{$gmail}) eq 'ARRAY') ? @{$ARGS->{$gmail}} : $ARGS->{$gmail}) {
+    next unless ($pars && $obj);
+    foreach my $envelope ((ref($obj) eq 'ARRAY') ? @{$obj} : $obj) {
       $self->warn("{Filter}[$MAIL]{start}1");
-      my $outmail = $envelope->{content};
+      my $outmail = $envelope->{Content};
       if ($outmail) {
         $self->info("$MAIL has Content");
       } else {
-        return 1062 unless $envelope->{file};
-        $self->info("$MAIL Template: ".$envelope->{file});
+        return 1062 unless $envelope->{File};
+        $self->info("$MAIL Template: ".$envelope->{File});
         $outmail = '';
-        $err = $self->get_template(\$outmail, $lists, $other, $envelope->{file}, $envelope->{extra})
+        $err = $self->get_template(\$outmail, $lists, $other, $envelope->{File}, $envelope->{Extra})
   and return $err;
       }
       return 1061 unless $outmail;
       while (my ($key, $val) = each %{$envelope}) {
-        next if (grep {$key eq $_} qw(file content callback extra));
+        next if (grep {$key eq $_} qw(File Content Callback Extra));
         $pars->{$key} = $val;
       }
       $err = $self->$send($pars, $outmail);
-      $envelope->{callback}->($err) if ($err and $envelope->{callback});
+      $envelope->{Callback}->($err) if ($err and $envelope->{Callback});
       $self->warn("{Filter}[$MAIL]{end}1:",$err);
       return $err if $err;
     }
@@ -94,7 +95,12 @@ sub get_action {
   my $self = shift;
   my $action_name = shift;
 
-  my $action = $self->{R}->param($action_name) || $self->{DEFAULT_ACTION};
+  my $action = $self->{R}->param($action_name);
+  unless ($action) {
+    $action = ($ENV{REQUEST_METHOD} eq "GET" and $self->{R}->{"_gid_url"})
+	? $self->{DEFAULT_ACTIONS}->{"GET_item"} 
+	: $self->{DEFAULT_ACTIONS}->{$ENV{REQUEST_METHOD}};
+  }
   my $actions  = $self->{ACTIONS};
   return ($action, $actions->{$action}) if $actions->{$action};
 
@@ -125,14 +131,14 @@ sub preset {
 
 sub before {
   my $self = shift;
-  my ($dbh, $form, $extra, $nextextras) = @_;
+  my ($form, $extra, $nextextras) = @_;
 
   return;
 }
 
 sub after {
   my $self = shift;
-  my ($form, $lists) = @_;
+  my ($form) = @_;
 
   return;
 }
