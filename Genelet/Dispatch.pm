@@ -64,9 +64,10 @@ sub init {
   my %base = (env=>\%ENV);
   for my $key (keys %$config) {
     next if ($key eq "Roles");
-    $base{lc $_} = $config->{$_}
+    $base{lc $key} = $config->{$key}
   }
   $base{logger} = $logger if $logger;
+  $base{default_actions} ||= {"GET"=>"topics", "GET_item"=>"edit", "PUT"=>"update", "POST"=>"insert", "DELETE"=>"delete"};
   
   my $gates;
   my $dbis;
@@ -110,6 +111,7 @@ Logout Domain Path Max_age)) {
 	dbis    => $dbis,
 	gates   => $gates);
 
+
   my $cache = Genelet::Cache->new(
     routes        => $config->{Static},
     document_root => $config->{cache_root}||$config->{document_root},
@@ -134,7 +136,7 @@ sub run {
 
   my ($cgi, $c) = init($config, @_);
 
-  unless ($Fcgi) {
+  unless ($_[1]) {
     $c->r($cgi->new());
     return $c->run();
   }

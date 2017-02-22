@@ -3,6 +3,7 @@
 use strict;
 use Data::Dumper;
 use Getopt::Long;
+use Cwd;
 use DBI;
 
 use Genelet::Helper::Base;
@@ -11,7 +12,7 @@ use Genelet::Helper::Angular;
 
 my $force   = "";
 my $angular = "";
-my $dir     = $ENV{HOME}."/geneletperl";
+my $dir     = $ENV{HOME}."/geneperl";
 my $dbuser  = "";
 my $dbpass  = "";
 my $dbname  = "";
@@ -53,11 +54,12 @@ my $dbh = DBI->connect("dbi:".($dbtype eq "sqlite" ? "SQLite" : "MySQL").":$dbna
 my $account = $tables[0];
 my $base = Genelet::Helper::Base->new(
 	root   => $dir,
+	oriperl=> cwd(),
 	force  => $force,
-    dbh    => $dbh,
-    dbtype => $dbtype,
-    project=> $project,
-    script => $script,
+	dbh    => $dbh,
+	dbtype => $dbtype,
+	project=> $project,
+	script => $script,
 	account=> $account,
 	tables => \@tables
 );
@@ -65,10 +67,10 @@ my $base = Genelet::Helper::Base->new(
 my $extra = Genelet::Helper::Angular->new(
 	root   => $dir,
 	force  => $force,
-    dbh    => $dbh,
-    dbtype => $dbtype,
-    project=> $project,
-    script => $script,
+	dbh    => $dbh,
+	dbtype => $dbtype,
+	project=> $project,
+	script => $script,
 	account=> $account,
 	tables => \@tables
 ) if $angular;
@@ -109,8 +111,8 @@ for my $t (@tables) {
 	die $nons unless $fields;
 	my $table = Genelet::Helper::Table->new(
 		root   => $dir,
-    	project=> $project,
-    	script => $script,
+		project=> $project,
+		script => $script,
 		account=> $account,
 		tables => \@tables,
 		table  => $t,
@@ -122,8 +124,8 @@ for my $t (@tables) {
 	$table->set_objcls();
 	my $angle = Genelet::Helper::Angular->new(
 		root   => $dir,
-    	project=> $project,
-    	script => $script,
+		project=> $project,
+		script => $script,
 		account=> $account,
 		tables => \@tables,
 		table  => $t,

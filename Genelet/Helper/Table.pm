@@ -4,46 +4,18 @@ use strict;
 use Data::Dumper;
 use Genelet::Helper::Base;
 
-use vars qw(@ISA $AUTOLOAD);
+use vars qw(@ISA);
 @ISA = qw(Genelet::Helper::Base);
 
-my %init = (
+__PACKAGE__->setup_accessors(
 	table=> "",
 	obj => "",
 	cls => "",
 	pk   => "",
-    ak   => "",
-    nons => [],
+	ak   => "",
+	nons => [],
 	fields=>[],
 );
-
-sub new {
-	my ($class, %args) = @_;
-	my $self  = $class->SUPER::new(%args);
-
-	foreach my $attr (keys %init) {
-		my $u = uc $attr;
-		$self->{$u} = $args{$attr};
-		$self->{$u} = $init{$attr} unless (defined($self->{$u}));
-	}
-
-	bless $self, $class;
-	return $self;
-}
-
-sub cls {
-  my $self = shift;
-
-  $self->{CLS} = shift if (@_);
-  return $self->{CLS};
-}
-
-sub obj {
-  my $self = shift;
-
-  $self->{OBJ} = shift if (@_);
-  return $self->{OBJ};
-}
 
 sub set_objcls {
 	my $self = shift;
@@ -59,7 +31,7 @@ sub model {
 	my $CLS      = $self->{CLS};
 
 	my $init = ($self->{AK}) ? 
-qq`my \$init = {
+qq`__PACKAGE__->setup_accessors(
 	current_table   => '`.$self->{TABLE}.qq`',
 	current_key     => '`.$self->{PK}.qq`',
 	current_id_auto => '`.$self->{AK}.qq`',
@@ -67,16 +39,16 @@ qq`my \$init = {
 	update_pars     => ['`.$self->{AK}.qq`',\@adds],
 	topics_pars     => ['`.$self->{AK}.qq`',\@adds],
 	edit_pars       => ['`.$self->{AK}.qq`',\@adds]
-};
+);
 ` :
-qq`my \$init = {
+qq`__PACKAGE__->setup_accessors(
 	current_table   => '`.$self->{TABLE}.qq`',
 	current_key     => '`.$self->{PK}.qq`',
 	insert_pars     => [\@adds],
 	update_pars     => [\@adds],
 	topics_pars     => [\@adds],
 	edit_pars       => [\@adds]
-};
+);
 `;
 
 	return qq`package $PROJECT`.qq`::$CLS`.qq`::Model;
@@ -89,19 +61,6 @@ use vars qw(\$AUTOLOAD \@ISA);
 
 my \@adds = qw(`.join(' ', @{$self->{FIELDS}}).qq`);
 $init
-sub new {
-  my (\$class, %args) = \@_;
-  my \$self  = \$class->SUPER::new(\%args);
-
-  foreach my \$attr (keys \%\$init) {
-    my \$u       = uc \$attr;
-    \$self->{\$u} = \$args{\$attr};
-    \$self->{\$u} = \$init->{\$attr} unless defined(\$self->{\$u});
-  }
-
-  bless \$self, \$class;
-  return \$self;
-}
 
 1;
 `;
@@ -117,26 +76,20 @@ sub filter {
 
 use strict;
 use $PROJECT`.qq`::Filter;
-use vars qw(\$AUTOLOAD \@ISA);
+use vars qw(\@ISA);
 
 \@ISA=('$PROJECT`.qq`::Filter');
 
-sub new {
-	my (\$class, %args) = \@_;
-	my \$self  = \$class->SUPER::new(\%args);
-
-	\$self->{ACTIONS} = {
+__PACKAGE__->setup_accessors(
+	actions => {
           'topics' 	  => {},
           'startnew'  => {$groups},
           'insert' => {'validate' => [qw(`.join(' ', @{$self->{NONS}}).qq`)]},
           'delete' => {'validate' => ['`.$self->{PK}.qq`']},
           'edit'   => {'validate' => ['`.$self->{PK}.qq`']},
           'update' => {'validate' => ['`.$self->{PK}.qq`']}
-	};
-
-	bless \$self, \$class;
-	return \$self;
-}
+	}
+);
 
 sub preset {
 #	my \$self = shift;
@@ -145,8 +98,8 @@ sub preset {
 
 #	my \$ARGS   = \$self->{ARGS};
 #	my \$r      = \$self->{R};
-#	my \$who    = \$ARGS->{_gwho};
-#	my \$action = \$ARGS->{_gaction};
+#	my \$who    = \$ARGS->{g_role};
+#	my \$action = \$ARGS->{g_action};
 
 	return;
 }
@@ -158,8 +111,8 @@ sub before {
 
 #	my \$ARGS   = \$self->{ARGS};
 #	my \$r      = \$self->{R};
-#	my \$who    = \$ARGS->{_gwho};
-#	my \$action = \$ARGS->{_gaction};
+#	my \$who    = \$ARGS->{g_role};
+#	my \$action = \$ARGS->{g_action};
 
 	return;
 }
@@ -171,8 +124,8 @@ sub after {
 
 #	my \$ARGS   = \$self->{ARGS};
 #	my \$r      = \$self->{R};
-#	my \$who    = \$ARGS->{_gwho};
-#	my \$action = \$ARGS->{_gaction};
+#	my \$who    = \$ARGS->{g_role};
+#	my \$action = \$ARGS->{g_action};
 
 #	my (\$form, \$lists) = \@_;
 

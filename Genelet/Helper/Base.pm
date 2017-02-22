@@ -2,31 +2,22 @@ package Genelet::Helper::Base;
 
 use strict;
 use DBI;
+use Genelet::Accessor;
 
-my %init = (
+use vars qw(@ISA);
+@ISA = qw(Genelet::Accessor);
+
+__PACKAGE__->setup_accessors(
 	force  => undef,
 	dbtype => "",
 	dbh    => {},
 	project=> "myproject",	
 	script => "myscript",	
 	root   => "",
+	oriperl => "",
 	account=> "",
 	tables => []
 );
-
-sub new {
-	my ($class, %args) = @_;
-	my $self  = {};
-
-	foreach my $attr (keys %init) {
-		my $u = uc $attr;
-		$self->{$u} = $args{$attr};
-		$self->{$u} = $init{$attr} unless (defined($self->{$u}));
-	}
-
-	bless $self, $class;
-	return $self;
-}
 
 sub get_table {
 	my $self = shift;
@@ -255,11 +246,11 @@ sub script {
 		my ($obj, $cls) = $self->_objcls($t);
 		push @arr, $cls;
 	}
-    my $comp = '"'.join('", "', @arr).'"';
+	my $comp = '"'.join('", "', @arr).'"';
 
 	return qq`#!/usr/bin/perl
 
-use lib qw(`.$self->{ROOT}.qq`);
+use lib qw(`.$self->{ROOT}.qq`/lib `.$self->{ORIPERL}.qq`);
 
 use strict;
 use JSON;
@@ -313,9 +304,9 @@ use Genelet::$db;
 use Genelet::Crud;
 
 use vars qw(\@ISA);
-\@ISA = qw(Genelet::Model Genelet::$db Genelet::Crud);
+\@ISA = qw(Genelet::Model Genelet::$db);
 
-my \%init = (
+__PACKAGE__->setup_accessors(
 	'empty_name' => 'empties',
 	'sortby' => 'sortby',
 	'totalno' => 'totalno',
@@ -326,20 +317,6 @@ my \%init = (
 	'sortreverse' => 'sortreverse',
 	'field' => 'field'
 );
-
-sub new {
-  my (\$class, \%args) = \@_;
-  my \$self  = \$class->SUPER::new(%args);
-
-  foreach my \$attr (keys %init) {
-    my \$u = uc \$attr;
-    \$self->{\$u} = \$args{\$attr};
-    \$self->{\$u} = \$init{\$attr} unless (defined(\$self->{\$u}));
-  }
-
-  bless \$self, \$class;
-  return \$self;
-}
 
 1;
 `;
