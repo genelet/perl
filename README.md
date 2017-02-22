@@ -12,3 +12,7 @@ Genelet has little dependence on 3rd party packages. The list is so short that w
 Virtual Hosting
 
 For those working under a virtual hosting environment, Genelet is always able to run in the CGI mode. It would be very likely to run in the Fast CGI mode too, as far as the virtual hosting provider runs PHP under Apache’s mod_fcgid.  You can develop in CGI, and switch to Fast CGI anytime to gain the PHP speed.
+
+Developer Manual: http://www.genelet.com/index.php/2017/02/08/perl-language-developer-manual/
+
+Tutorial: http://www.genelet.com/index.php/2017/02/04/perl-tutorial-one/
