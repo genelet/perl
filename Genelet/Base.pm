@@ -34,6 +34,7 @@ __PACKAGE__->setup_accessors(
   callback_name => 'callback',
   login_name    => 'login',
   logout_name   => 'logout',
+  default_actions => {"GET"=>"topics", "GET_item"=>"edit", "PUT"=>"update", "POST"=>"insert", "DELETE"=>"delete"}
 );
 
 sub dbh_trace {
