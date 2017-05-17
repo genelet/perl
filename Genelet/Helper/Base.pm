@@ -131,7 +131,7 @@ sub _dirs {
 	my $self = shift;
 	my @dirs = @_;
 
-    for my $dir (@dirs) {
+	for my $dir (@dirs) {
 		if (-d $dir) {
 			next;
 		} elsif (-e $dir) {
@@ -145,15 +145,15 @@ sub _dirs {
 }
 
 sub _objcls {
-    my $self = shift;
+	my $self = shift;
 	my $name = shift;
 
-    my @arr = split "_", $name, -1;
-    my $OBJ = lc(join "", @arr);
+	my @arr = split "_", $name, -1;
+	my $OBJ = lc(join "", @arr);
 	my $CLS = ucfirst($OBJ);
 #   my $CLS = join "", map {ucfirst(lc $_)} @arr;
 
-    return ($OBJ, $CLS);
+	return ($OBJ, $CLS);
 }
 
 sub dir_all {
@@ -162,10 +162,10 @@ sub dir_all {
 	my $root = $self->{ROOT};
 	my $proj = ucfirst(lc $self->{PROJECT});
 
-    my @dirs = ($root, $root."/lib", $root."/lib/".$proj, $root."/bin", $root."/conf", $root."/logs", $root."/www", $root."/views", $root."/views/admin", $root."/views/public");
+	my @dirs = ($root, $root."/lib", $root."/lib/".$proj, $root."/bin", $root."/conf", $root."/logs", $root."/www", $root."/views", $root."/views/admin", $root."/views/public");
 
 	my $i=0;
-    for my $v (@{$self->{TABLES}}) {
+	for my $v (@{$self->{TABLES}}) {
 		my ($obj, $cls) = $self->_objcls($v);	
 		push(@dirs, $root."/lib/".$proj."/$cls");
 		push(@dirs, $root."/views/admin/".$obj);
@@ -173,7 +173,7 @@ sub dir_all {
 			push(@dirs, $root."/views/public/".$obj);
 		}
 		$i++;
-    }
+	}
 
 	return $self->_dirs(@dirs);
 }
@@ -269,7 +269,7 @@ use Template;
 
 use Genelet::Dispatch;
 
-Genelet::Dispatch::run("`.$self->{ROOT}.qq`/conf/config.json", [$comp]);
+Genelet::Dispatch::run("`.$self->{ROOT}.qq`/conf/config.json", "`.$self->{ROOT}.qq`/lib", [$comp]);
 
 exit;
 `;
@@ -307,15 +307,7 @@ use vars qw(\@ISA);
 \@ISA = qw(Genelet::Model Genelet::$db);
 
 __PACKAGE__->setup_accessors(
-	'empty_name' => 'empties',
-	'sortby' => 'sortby',
-	'totalno' => 'totalno',
-	'rowcount' => 'rowcount',
-	'pageno' => 'pageno',
-	'max_pageno' => 'max_pageno',
 	'total_force' => 1,
-	'sortreverse' => 'sortreverse',
-	'field' => 'field'
 );
 
 1;
@@ -323,9 +315,9 @@ __PACKAGE__->setup_accessors(
 }
 
 sub top {
-    my $self = shift;
+	my $self = shift;
 
-    return qq`<!doctype html>
+	return qq`<!doctype html>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />

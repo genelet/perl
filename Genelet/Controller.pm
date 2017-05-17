@@ -2,6 +2,7 @@ package Genelet::Controller;
 
 use strict;
 use URI::Escape;
+use Storable qw(dclone);
 #use DBI ();
 use JSON;
 use Data::Dumper;
@@ -18,13 +19,11 @@ __PACKAGE__->setup_accessors(
   escape_esc => 1,
   roles      => {},
   shadows    => undef,
-  default_actions => undef,
 
   json_lib   => 1,
   xtags      => {json=>'json', jsonp=>'jsonp', form=>'form', xml=>'xml'},
 
   cache      => undef,
-  blks       => undef,
 );
 
 sub assign_fk {
@@ -135,6 +134,7 @@ sub handler {
   my ($model, $who, $tag, $obj, $name) = split /\//, $pathinfo, -1;
   return $self->send_status_page(404) if ($name or !$obj);
   $name = join('', map {ucfirst(lc $_)} split('_', $obj));
+  my $save = $name;
 
   $self->warn("{Controller}[OK]{good url}1");
   $self->warn("{Controller}[Name]{role}".$who);
@@ -147,10 +147,14 @@ sub handler {
 
   $self->warn("{Controller}[Filter]{start}1");
   my $filter = $name->new(gate=>$gate, map {($_, $self->{uc $_})} 
-	qw(document_root script_name secret template blks errors storage 
+	qw(document_root script_name secret template errors
 	dbis ua logger dbis r default_actions));
   return $self->send_status_page(404) unless $filter;
   $self->warn("{Controller}[Filter]{end}1");
+  for my $att (qw(actions fks escs blks)) {
+    my $ref = $self->{STORAGE}->{$save};
+    $filter->$att(ref($ref->{$att}) ? dclone($ref->{$att}) : $ref->{$att}) if exists($ref->{$att});
+  }
  
   my ($action, $actionHash) = $filter->get_action($self->{ACTION_NAME});
   return $self->send_status_page(404) unless ($action && $actionHash);
@@ -304,7 +308,7 @@ sub handler {
   $self->warn("{Controller}[Validate]{end}1");
 
   my ($dbh, $form);
-  unless ($actionHash->{'no_db'}) {
+  unless ($actionHash->{"options"} and grep {$_ eq "no_db"} @{$actionHash->{"options"}}) {
     $self->warn("{Controller}[DB]{start}1");
     return $self->error_page($filter, $ARGS, 1072) unless ($self->{DB} && (ref($self->{DB}) eq 'ARRAY'));
     my $db;
@@ -332,11 +336,14 @@ sub handler {
   }
 
   $self->warn("{Controller}[Model]{start}1");
-  $form = $model->new(dbh=>$dbh, args=>$ARGS, logger=>$self->{LOGGER});
+  $form = $model->new(dbh=>$dbh, args=>$ARGS, logger=>$self->{LOGGER}, storage=>$self->{STORAGE});
   if ($form) {
     $self->warn("{Controller}[Model]{end}1");
-    $form->storage($self->{STORAGE}) if $self->{STORAGE};
-    unless ($actionHash->{'no_db'}) {
+    my $ref = $self->{STORAGE}->{$save};
+    for my $att (qw(nextpages current_table current_tables current_key current_id_auto key_in fields empties total_force sortby sortreverse pageno rowcount totalno maxpagenoedit_pars update_pars insupd_pars insert_pars topics_pars)) {
+      $form->$att(ref($ref->{$att}) ? dclone($ref->{$att}) : $ref->{$att}) if exists($ref->{$att});
+    }
+    unless ($actionHash->{"options"} and grep {$_ eq "no_db"} @{$actionHash->{"options"}}) {
       $error = $form->do_sql("SET NAMES 'utf8'") if $self->{DB}->[0] =~ /mysql/i;
       if ($error) {
         $dbh->disconnect;
@@ -362,7 +369,7 @@ sub handler {
     }
   }
 
-  unless ($actionHash->{'no_method'}) {
+  unless ($actionHash->{"options"} and grep {$_ eq "no_method"} @{$actionHash->{"options"}}) {
     $self->warn("{Controller}[Action]{start}1");
     $error = $form->can($action) ? $form->$action($extra, @$nextextras) : 1051;
     $self->warn("{Controller}[Action]{end}1:",$error);

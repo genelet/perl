@@ -11,34 +11,33 @@ use vars qw(@ISA);
 @ISA = ('Genelet::Crud');
 
 __PACKAGE__->setup_accessors(
-	args    => {},
-	lists   => [],
-	other   => {},
-	logger  => undef,
-	storage => undef,
+  args    => {},
+  lists   => [],
+  other   => {},
+  logger  => undef,
+  storage => undef,
 
   nextpages => {},
 
   current_key   => undef, # a column name, usually pk 
-  insert_pars   => undef, # add a new record
   current_id_auto=>undef, # an auto increment field name
+  key_in        => undef, # delete only, stop if key in other tables
+  empties       => 'empties',
+  fields        => "fields", 
 
+  insert_pars   => undef, # add a new record
   topics_pars   => undef, # topics, select, search etc. starts here
+  edit_pars     => undef, # edit
+  update_pars   => undef, # update
+  insupd_pars   => undef, # insert updater uniques
+
   total_force   => 0,     # no total rows returned; 1 yes, if not in query
   sortby        => "sortby",      # default sort according to field_key
   sortreverse   => "sortreverse", # if not null then reverse sort
   pageno        => "pageno",      # e.g. "pageno"
   rowcount      => "rowcount",    # e.g. "rowcount"
   totalno       => "totalno",     # e.g. "totalno"
-  maxpageno     => "maxpageno",  # e.g. "max_pageno"
-  field         => "field", 
-
-  edit_pars     => undef, # edit
-  update_pars   => undef, # update
-  empties       => 'empties',
-
-  current_insupd=> undef, # insert updater uniques
-  key_in        => undef, # delete only, stop if key in other tables
+  maxpageno     => "maxpageno",  # e.g. "maxpageno"
 );
 
 my $filtered_fields = sub {
@@ -87,6 +86,14 @@ sub another_object {
   my $p = $model->new();
   $p->dbh($self->{DBH}) if $self->{DBH};
   $p->logger($self->{LOGGER}) if $self->{LOGGER};
+
+  my @parts = split /::/, $model, -1;
+  pop @parts;
+  my $obj = pop @parts;
+  my $ref = $self->{STORAGE}->{$obj};
+  for my $att (qw(nextpages current_table current_tables current_key current_id_auto key_in fields empties total_force sortby sortreverse pageno rowcount totalno maxpagenoedit_pars update_pars insupd_pars insert_pars topics_pars)) {
+    $p->$att(dclone($ref->{$att})) if $ref->{$att};
+  }
 
   my @pars = map {$self->{uc $_}} (qw(sortby sortreverse pageno rowcount totalno max_pageno field));
   my $args;
@@ -243,7 +250,7 @@ sub topics {
     $self->{OTHER}->{$self->{MAXPAGENO}} = $ARGS->{$self->{MAXPAGENO}} = int( ($ARGS->{$totalno}-1)/$ARGS->{$self->{ROWCOUNT}} )+1;
   }
 
-  my $fields = $filtered_fields->($ARGS->{$self->{FIELD}}, $self->{TOPICS_PARS});
+  my $fields = $filtered_fields->($ARGS->{$self->{FIELDS}}, $self->{TOPICS_PARS});
 
   $self->{LISTS} = [];
   $err = $self->topics_hash($self->{LISTS}, $fields, $extra, $self->get_order_string()) and return $err;
@@ -290,7 +297,7 @@ sub edit {
   my ($id, $val) = $self->_get_id_val($extra);
   return [1040, $id] unless defined($val);
       
-  my $fields = $filtered_fields->($ARGS->{$self->{FIELD}}, $self->{EDIT_PARS});
+  my $fields = $filtered_fields->($ARGS->{$self->{FIELDS}}, $self->{EDIT_PARS});
 
   $self->{LISTS} = [];
   my $err = $self->edit_hash($self->{LISTS}, $fields, $id, $val, $extra);
@@ -337,7 +344,7 @@ sub insupd {
   my $self = shift;
   my $extra = shift;
 
-  my $uniques = $self->{CURRENT_INSUPD};
+  my $uniques = $self->{INSUPD_PARS};
   return 1078 unless $uniques;
 
   my $field_values = $get_fv->($self->{ARGS}, $self->{INSERT_PARS});

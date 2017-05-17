@@ -23,12 +23,12 @@ my $script  = "myscript";
 my $usage = sub {
 	return "Usage: $0 [options] table1 table2 ...
 	--dir    program root, default '$dir'
-	--dbtype  database type 'sqlite' or 'mysql', default 'mysql'
+	--dbtype  database type 'sqlite' or 'mysql', default '$dbtype'
 	--dbname  database name, mandatory
 	--dbuser  database username, default ''
 	--dbpass  database password, default ''
-	--project project name, default to 'myproject'
-	--script  script name, default to 'myscript'
+	--project project name, default to '$project'
+	--script  script name, default to '$script'
 	--force   if to override existing files, default to false
 	--angular if to include Angular 1.3 files, default to false
 "
@@ -146,9 +146,9 @@ for my $t (@tables) {
 	my $lib = "lib/".ucfirst(lc $project)."/$cls";
 	$err = $base->write_it("$lib/Model.pm", $table->model())
 	|| $base->write_it("$lib/Filter.pm", $table->filter())
+	|| $base->write_it("$lib/component.json", $table->component())
 	|| $base->write_it("views/admin/$obj/startnew.html", $table->startnew())
 	|| $base->write_it("views/admin/$obj/topics.html", $table->topics())
-	|| $base->write_it("views/admin/$obj/dashboard.html", $table->topics())
 	|| $base->write_it("views/admin/$obj/edit.html", $table->edit())
 	|| $base->write_it("views/admin/$obj/insert.html", $base->top()."inserted\n"."</body>\n</html>\n")
 	|| $base->write_it("views/admin/$obj/update.html", $base->top()."updated\n"."</body>\n</html>\n")
@@ -162,7 +162,6 @@ for my $t (@tables) {
 		}
 		$err = $base->write_it("www/admin/$obj/startnew.html", $angle->startnew())
 		|| $base->write_it("www/admin/$obj/topics.html", $angle->topics())
-		|| $base->write_it("www/admin/$obj/dashboard.html", $angle->topics())
 		|| $base->write_it("www/admin/$obj/edit.html", $angle->edit());
 		die $err if $err;
 	}

@@ -15,7 +15,10 @@ sub execute_sth {
 
   eval {
     my $rv = (@_) ? $sth->execute(@_) : $sth->execute();
-    die 1073 unless ($rv);
+    unless ($rv) {
+      $self->{LOGGER}->warn($self->{DBH}->errstr()) if $self->{LOGGER};
+      die 1073;
+    }
   };
   if ($@) {
     return ($@ =~ /1073/) ? 1073 : 1074;
@@ -39,6 +42,10 @@ sub do_sql {
   my $self = shift;
   my $sql = shift;
 
+  if ($self->{LOGGER}) {
+    $self->{LOGGER}->warn($sql);
+    $self->{LOGGER}->warn(\@_) if @_;
+  }
   my $sth = $self->{DBH}->prepare($sql);
   my $err = $self->execute_sth($sth, @_);
   return $sql_err->($sql, $err) if $err;
@@ -48,6 +55,11 @@ sub do_sql {
 sub do_sqls {
   my $self = shift;
   my $sql = shift;
+
+  if ($self->{LOGGER}) {
+    $self->{LOGGER}->warn($sql);
+    $self->{LOGGER}->warn(\@_) if @_;
+  }
 
   my $sth = $self->{DBH}->prepare($sql);
   my $err;
@@ -71,6 +83,11 @@ sub select_sql_label {
   my $lists = shift;
   my $sql   = shift;
   my $select_labels = shift;
+
+  if ($self->{LOGGER}) {
+    $self->{LOGGER}->warn($sql);
+    $self->{LOGGER}->warn(\@_) if @_;
+  }
 
   my $sth = $self->{DBH}->prepare($sql);
   my $err = $self->execute_sth($sth, @_);
@@ -167,6 +184,11 @@ sub select_do_proc_label {
     $str = "CALL $proc_name($str_q, $str_n)";
   } else {
     $str = "CALL $proc_name($str_q)";
+  }
+
+  if ($self->{LOGGER}) {
+    $self->{LOGGER}->warn($str);
+    $self->{LOGGER}->warn(\@pars) if @pars;
   }
 
   my $sth = $self->{DBH}->prepare($str);
