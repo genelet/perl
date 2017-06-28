@@ -427,7 +427,6 @@ sub handler {
   my $output = '';
   if ($ARGS->{_gview}) {
     if ($ARGS->{_gview} eq 'jsonp') {
-      $hash{Success} = JSON::true;
       if ($output = $self->_json_data(\%hash, $action, $actionHash->{hide_json}, $ARGS, $lists, $other)) {
         $output =~ s/\n//g;
         $output = $ARGS->{$self->{CALLBACK_NAME}}.'('.$output.')';
@@ -435,7 +434,6 @@ sub handler {
         $error = 'error in encode json: '.$@;
       }
     } elsif ($ARGS->{_gview} eq 'json') {
-      $hash{Success} = JSON::true;
       unless ($output = $self->_json_data(\%hash, $action, $actionHash->{hide_json}, $ARGS, $lists, $other)) {
         $error = 'error in encode json: '.$@ unless $output;
       }
@@ -535,14 +533,20 @@ sub _json_data {
   my $self = shift;
   my ($hash, $action, $hide_json, $ARGS, $lists, $other) = @_;
 
-  $hash->{$action} = $lists if $lists;
+  $hash->{data} = $lists if $lists;
   while (my ($k, $v) = each %$ARGS) {
     next if (($hide_json and grep {$k eq $_} @$hide_json)
 		or (substr($k,0,2) eq '_g') or ($k eq 'g_document'));
-    $hash->{$k} = $v;
+    if (substr($k,0,2) eq 'g_') {
+      my $short = $k;
+      substr($short,0,2) = '';
+      $hash->{included}->{$short} = $v;
+    } else {
+      $hash->{incoming}->{$k} = $v;
+    }
   }
   if ($other) {
-    $hash->{$_} = $other->{$_} for (keys %$other);
+    $hash->{relationships}->{$_} = $other->{$_} for (keys %$other);
   }
 
   my $output;

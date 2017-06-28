@@ -5,6 +5,7 @@ package Genelet::Model;
 
 #use DBI qw(:utils);
 use strict;
+use Storable qw(dclone);
 
 use Genelet::Crud;
 use vars qw(@ISA);
@@ -92,7 +93,7 @@ sub another_object {
   my $obj = pop @parts;
   my $ref = $self->{STORAGE}->{$obj};
   for my $att (qw(nextpages current_table current_tables current_key current_id_auto key_in fields empties total_force sortby sortreverse pageno rowcount totalno maxpagenoedit_pars update_pars insupd_pars insert_pars topics_pars)) {
-    $p->$att(dclone($ref->{$att})) if $ref->{$att};
+    $p->$att(ref($ref->{$att})?dclone($ref->{$att}):$ref->{$att}) if $ref->{$att};
   }
 
   my @pars = map {$self->{uc $_}} (qw(sortby sortreverse pageno rowcount totalno max_pageno field));
