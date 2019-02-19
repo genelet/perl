@@ -5,6 +5,7 @@ use Data::Dumper;
 use Getopt::Long;
 use Cwd;
 use DBI;
+use lib qw(.);
 
 use Genelet::Helper::Base;
 use Genelet::Helper::Table;
@@ -49,7 +50,7 @@ my @tables = @ARGV;
 die $usage->() if @tables < 1;
 die $usage->() if (!$dbname);
 
-my $dbh = DBI->connect("dbi:".($dbtype eq "sqlite" ? "SQLite" : "MySQL").":$dbname", $dbuser, $dbpass) || die $!;
+my $dbh = DBI->connect("dbi:".($dbtype eq "sqlite" ? "SQLite" : "mysql").":$dbname", $dbuser, $dbpass) || die $!;
 
 my $account = $tables[0];
 my $base = Genelet::Helper::Base->new(

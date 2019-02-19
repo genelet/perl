@@ -264,7 +264,6 @@ sub handler {
   }
 
   $filter->args($ARGS);
-  $self->info($ARGS);
 
   my $error;
   my $extra = {};

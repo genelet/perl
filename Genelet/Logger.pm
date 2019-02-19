@@ -140,7 +140,7 @@ sub metrix {
   open(D, $self->{FILENAME}) || return;
   while (my $line = <D>) {
     chomp $line;
-    if ($line =~ /^\[warn (\d+)\]GENELET LOGGER {New Screen}{(\d+)}{([\.\d]+)}{(GET|POST)}(\S+) (.*)$/) {
+    if ($line =~ /^\[warn (\d+)\]GENELET LOGGER \{New Screen\}\{(\d+)\}\{([\.\d]+)\}\{(GET|POST)\}(\S+) (.*)$/) {
       my ($PID, $TIME, $IP, $METHOD, $URI, $UA) = ($1, $2, $3, $4, $5, $6); 
       if (($ip && ($ip ne $IP)) || ($ua && ($ua ne $UA))) {
         $in=0;

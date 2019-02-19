@@ -73,7 +73,7 @@ sub _mysql {
 	my $ak;
 	my (@nons, @k, @uk, @fields);
 	
-	while (my($field, $item) = each $lists) {
+	while (my($field, $item) = each %$lists) {
 		if ($item->{"Default"} eq "CURRENT_TIMESTAMP") {
 			next;
 		}
