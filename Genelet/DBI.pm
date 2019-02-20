@@ -78,6 +78,21 @@ sub select_sql {
   return $self->select_sql_label($lists, $sql, undef, @_);
 }
 
+sub get_args {
+  my $self = shift;
+  my $args = shift;
+  my $sql = shift;
+  my $lists = [];
+
+  my $err = $self->select_sql($lists, $sql, @_);
+  return $err if $err;
+  return unless ($lists && $lists->[0]);
+  while (my ($k, $v) = each %{$lists->[0]}) {
+    $args->{$k} = $v;
+  }
+  return;
+}
+
 sub select_sql_label {
   my $self = shift;
   my $lists = shift;

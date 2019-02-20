@@ -7,6 +7,7 @@ use Storable qw(dclone);
 use JSON;
 use Data::Dumper;
 use Genelet::Base;
+use Genelet::Utils;
 $Data::Dumper::Terse = 1;
 
 use vars qw(@ISA);
@@ -14,14 +15,13 @@ use vars qw(@ISA);
 
 #xtags: key, one in the project; value, the standard special tag name 
 __PACKAGE__->setup_accessors(
-  project    => '',
+# project    => '',
   pubrole    => '',
   escape_esc => 1,
   roles      => {},
   shadows    => undef,
 
   json_lib   => 1,
-  xtags      => {json=>'json', jsonp=>'jsonp', form=>'form', xml=>'xml'},
 
   cache      => undef,
 );
@@ -193,7 +193,6 @@ sub handler {
   $ARGS->{_guri}   = $pathinfo;
   $ARGS->{_gwho}   = $ARGS->{g_role} = $who;
   $ARGS->{_gtag}   = $ARGS->{g_tag} = $tag;
-  $ARGS->{_gview}  = $self->{XTAGS}->{$tag};
   $ARGS->{_gobj}   = $ARGS->{g_component} = $obj;
   $ARGS->{_gaction}= $ARGS->{g_action} = $action;
   $ARGS->{_gmime}  = $self->{CHARTAGS}->{$tag}->{"Content_type"};
@@ -254,7 +253,9 @@ sub handler {
     $self->warn("{Controller}[Upload]{start}1");
     while (my ($field, $value) = each %{$actionHash->{upload}}) {
       my $field_new = shift @$value;
-      $ARGS->{$field_new} = ($value) ? $self->upload_field($r, $field, @$value) : $self->upload_field($r, $field);
+      my $dir = $self->{UPLOADDIR};
+      $dir = shift(@$value) if $value;
+      $ARGS->{$field_new} = ($value) ? Genelet::Utils::upload_field($r, $field, $dir, @$value) : Genelet::Utils::upload_field($r, $field, $dir);
       #unless ($ARGS->{$field_new}) {
       #  $self->warn("{Controller}[Upload]{end}1:$field");
 	  #  return $self->error_page($filter, $ARGS, [1045, $field]);
@@ -339,7 +340,7 @@ sub handler {
   if ($form) {
     $self->warn("{Controller}[Model]{end}1");
     my $ref = $self->{STORAGE}->{$save};
-    for my $att (qw(nextpages current_table current_tables current_key current_id_auto key_in fields empties total_force sortby sortreverse pageno rowcount totalno maxpagenoedit_pars update_pars insupd_pars insert_pars topics_pars)) {
+    for my $att (qw(nextpages current_table current_tables current_key current_id_auto key_in fields empties total_force sortby sortreverse pageno rowcount totalno maxpageno edit_pars update_pars insupd_pars insert_pars topics_pars)) {
       $form->$att(ref($ref->{$att}) ? dclone($ref->{$att}) : $ref->{$att}) if exists($ref->{$att});
     }
     unless ($actionHash->{"options"} and grep {$_ eq "no_db"} @{$actionHash->{"options"}}) {
@@ -424,29 +425,26 @@ sub handler {
 
   $self->warn("{Controller}[View]{start}1");
   my $output = '';
-  if ($ARGS->{_gview}) {
-    if ($ARGS->{_gview} eq 'jsonp') {
-      if ($output = $self->_json_data(\%hash, $action, $actionHash->{hide_json}, $ARGS, $lists, $other)) {
-        $output =~ s/\n//g;
-        $output = $ARGS->{$self->{CALLBACK_NAME}}.'('.$output.')';
-      } else {
-        $error = 'error in encode json: '.$@;
-      }
-    } elsif ($ARGS->{_gview} eq 'json') {
-      unless ($output = $self->_json_data(\%hash, $action, $actionHash->{hide_json}, $ARGS, $lists, $other)) {
-        $error = 'error in encode json: '.$@ unless $output;
-      }
-      $r->{headers_out}->{'Access-Control-Allow-Origin'} = $self->get_origin();
-      $r->{headers_out}->{"Access-Control-Allow-Credentials"} = 'true';
-    } elsif ($ARGS->{_gview} eq 'xml') {
-      $output = $self->_xml_data(\%hash, $action, $ARGS, $lists, $other);
-    } elsif ($ARGS->{_gview} eq 'form') {
-      for my $key (@{$ARGS->{_gfield}}) {
-        $output .= '&'.$key."=".uri_escape_utf8($ARGS->{$key});
-      }
-      substr($output,0,1) = '' if $output;
+  if ($tag eq 'jsonp') {
+    if ($output = $self->_json_data(\%hash, $action, $actionHash->{hide_json}, $ARGS, $lists, $other)) {
+      $output =~ s/\n//g;
+      $output = $ARGS->{$self->{CALLBACK_NAME}}.'('.$output.')';
+    } else {
+      $error = 'error in encode json: '.$@;
     }
-    $self->info($output || "empty output.");
+  } elsif ($tag eq 'json') {
+    unless ($output = $self->_json_data(\%hash, $action, $actionHash->{hide_json}, $ARGS, $lists, $other)) {
+      $error = 'error in encode json: '.$@ unless $output;
+    }
+    $r->{headers_out}->{'Access-Control-Allow-Origin'} = $self->get_origin();
+    $r->{headers_out}->{"Access-Control-Allow-Credentials"} = 'true';
+  } elsif ($tag eq 'xml') {
+    $output = $self->_xml_data(\%hash, $action, $ARGS, $lists, $other);
+  } elsif ($tag eq 'form') {
+    for my $key (@{$ARGS->{_gfield}}) {
+      $output .= '&'.$key."=".uri_escape_utf8($ARGS->{$key});
+    }
+    substr($output,0,1) = '' if $output;
   } else {
     $error = $filter->get_template(\$output, $lists, $other, $action.".".$tag);
   }

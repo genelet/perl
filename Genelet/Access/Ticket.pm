@@ -149,6 +149,7 @@ sub handler_fields {
     $uri = $newuri->as_string();
   }
 
+  $self->warn("{Loginout}[Signature]{redirect}".$uri);
   $r->{headers_out}->{"Location"} = $uri;
   return $self->send_status_page(303);
 }

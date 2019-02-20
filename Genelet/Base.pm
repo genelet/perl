@@ -22,6 +22,7 @@ __PACKAGE__->setup_accessors(
   template      => '',
   document_root => '',
   project       => '',
+  uploaddir     => '',
   script        => '',
 
   secret        => '',
