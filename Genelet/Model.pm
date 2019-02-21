@@ -82,9 +82,10 @@ sub clean_other {
 sub another_object {
   my $self = shift;
   my $page = shift;
-  my $model = $page->{model};
+  my $model = $self->{STORAGE}->{_CONFIG}->{Project}."::".ucfirst($page->{model})."::Model";
 
   my $p = $model->new();
+  $p->storage($self->{STORAGE});
   $p->dbh($self->{DBH}) if $self->{DBH};
   $p->logger($self->{LOGGER}) if $self->{LOGGER};
 

@@ -66,6 +66,7 @@ sub init {
     close(DIR);
   }
   $Storage = {} unless $Storage;
+  $Storage->{_CONFIG} = $config;
   for my $c (@$Components) {
     my $json = $Libpath . "/" . $PROJECT . "/" . $c . "/component.json";  
     die "$json of $c not found!" unless (-e $json);
