@@ -102,6 +102,8 @@ sub before {
 #	my \$err  = \$self->SUPER::before(\@_);
 #	return \$err if \$err;
 
+#   my ($form, $extra, $nextextras) = @_;
+
 #	my \$ARGS   = \$self->{ARGS};
 #	my \$r      = \$self->{R};
 #	my \$who    = \$ARGS->{g_role};

@@ -85,9 +85,6 @@ sub another_object {
   my $model = $self->{STORAGE}->{_CONFIG}->{Project}."::".ucfirst($page->{model})."::Model";
 
   my $p = $model->new();
-  $p->storage($self->{STORAGE});
-  $p->dbh($self->{DBH}) if $self->{DBH};
-  $p->logger($self->{LOGGER}) if $self->{LOGGER};
 
   my @parts = split /::/, $model, -1;
   pop @parts;
@@ -97,6 +94,7 @@ sub another_object {
     $p->$att(ref($ref->{$att})?dclone($ref->{$att}):$ref->{$att}) if $ref->{$att};
   }
 
+=pod
   my @pars = map {$self->{uc $_}} (qw(sortby sortreverse pageno rowcount totalno max_pageno field));
   my $args;
   while (my ($key, $value) = each %{$self->{ARGS}}) {
@@ -106,6 +104,12 @@ sub another_object {
     $args->{$_} = $page->{$_} if (defined $page->{$_});
   } 
   $p->args($args);
+=cut
+  
+  $p->args($self->{ARGS});
+  $p->storage($self->{STORAGE});
+  $p->dbh($self->{DBH}) if $self->{DBH};
+  $p->logger($self->{LOGGER}) if $self->{LOGGER};
 
   return $p;
 }
@@ -330,7 +334,10 @@ sub insert {
   my $err = $self->insert_hash($field_values);
   return $err if $err;
 
-  $field_values->{$self->{CURRENT_ID_AUTO}} = $self->last_insertid() if $self->{CURRENT_ID_AUTO};
+  if ($self->{CURRENT_ID_AUTO}) {
+    $field_values->{$self->{CURRENT_ID_AUTO}} = $self->last_insertid();
+    $self->{ARGS}->{$self->{CURRENT_ID_AUTO}} ||= $field_values->{$self->{CURRENT_ID_AUTO}};
+  }
   $self->{LISTS} = [$field_values];
 
   return $self->process_after('insert', @_);
@@ -378,7 +385,11 @@ sub insupd {
   my $err = $self->insupd_hash($field_values, $upd_field_values, $self->{CURRENT_KEY}, $uniques, \$s_hash);
   return $err if $err;
 
-  $field_values->{$self->{CURRENT_ID_AUTO}} = $self->last_insertid() if ($s_hash eq 'insert' and $self->{CURRENT_ID_AUTO});
+  if ($s_hash eq 'insert' and $self->{CURRENT_ID_AUTO}) {
+    $field_values->{$self->{CURRENT_ID_AUTO}} = $self->last_insertid();
+    $self->{ARGS}->{$self->{CURRENT_ID_AUTO}} ||= $field_values->{$self->{CURRENT_ID_AUTO}}
+  }
+
   $self->{LISTS} = [$field_values];
 
   return $self->process_after('insupd', @_);
