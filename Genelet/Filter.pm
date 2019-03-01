@@ -84,7 +84,7 @@ sub _set_login_cookie {
 
   my $provider = $self->{R}->param($self->{PROVIDER_NAME}) || 'db';
   my $ticket = $self->{DBIS}->{$role}->{$provider};
-  my $err = ($case eq 'as') ? $ticket->get_login_cookie_as(@_) : $ticket->get_login_cookie(@_);
+  my $err = ($case eq 'as') ? $ticket->set_login_cookie_as(@_) : $ticket->set_login_cookie(@_);
   return $err if $err;
 
   $self->{R}->{headers_out} = $ticket->r()->{headers_out};

@@ -129,7 +129,7 @@ sub forbid {
   $escaped = uri_escape($escaped);
   $self->set_cookie($self->{GO_PROBE_NAME}, $escaped);
   $self->set_cookie_expired($self->{SURFACE});
-  my $redirect = $self->{REDIRECT}||$ENV{SCRIPT_NAME}||$self->{SCRIPT_NAME};
+  my $redirect = $self->{REDIRECT}||$ENV{SCRIPT_NAME}||$self->{SCRIPT};
   
   $redirect .= "/$role/$tag/" . $self->{LOGIN_NAME} . "?" . $self->{GO_URI_NAME} . "=$escaped&" . $self->{GO_ERR_NAME} . "=$error";
   $self->{R}->{headers_out}->{"Location"} = $redirect;
@@ -216,7 +216,7 @@ sub build_uri {
 sub get_scriptname {
   my $self = shift;
 
-  return $self->{SCRIPT_NAME} || $ENV{SCRIPT_NAME};
+  return $self->{SCRIPT} || $ENV{SCRIPT_NAME};
 }
 
 sub get_documentroot {

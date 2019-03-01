@@ -119,7 +119,7 @@ sub new {
   $self->{EXPIRE} = $args{expire};
   $self->{EXPIREALL} = $args{expireall};
   $self->{CURRENT} = $args{current};
-  $self->{SCRIPT_NAME}    = $args{script_name};
+  $self->{SCRIPT}  = $args{script};
   $self->{ACTION_NAME}    = $args{action_name};
 
   if ($self->{ROUTES} && !$self->{METRIX}) {
@@ -188,11 +188,11 @@ sub action_name {
   return $self->{ACTION_NAME};
 }
 
-sub script_name {
+sub script {
   my $self = shift;
 
-  $self->{SCRIPT_NAME} = shift if (@_);
-  return $self->{SCRIPT_NAME};
+  $self->{SCRIPT} = shift if (@_);
+  return $self->{SCRIPT};
 }
 
 sub cache_file {
@@ -363,7 +363,7 @@ sub rewrite {
     $q .= '&'.$var.'='.$par;
   }
 
-  return join('/', $self->{SCRIPT_NAME}, $reserve->{role}, $reserve->{tag}, $reserve->{component}).'?'.$self->{ACTION_NAME}.'='.$reserve->{action}.$q.'&_gtype='.$reserve->{type};
+  return join('/', $self->{SCRIPT}, $reserve->{role}, $reserve->{tag}, $reserve->{component}).'?'.$self->{ACTION_NAME}.'='.$reserve->{action}.$q.'&_gtype='.$reserve->{type};
 
   sub url_values {
     my ($hash, $reserve, $route, $pars) = @_; 
@@ -451,7 +451,7 @@ Genelet::Cache - Create and destroy caches in Genelet
 
  Or, rewrite the cached file to its original URI:
 
- $cache->script_name('/run.fcgi'); # constructor for script name
+ $cache->script('/run.fcgi'); # constructor for script name
  $cache->action_name('action');    # constructor for action name
  my $url = $cache->rewrite('/cached/vendor/111/333_e.html');
 
@@ -484,7 +484,7 @@ You may pass the following getters and setters in the new() method.
 
 =item $cache->document_root(), get or set the server root,
 
-=item $cache->script_name(), get or set the current script or handler name
+=item $cache->script(), get or set the current script or handler name
 
 =item $cache->action_name(), get or set the action name
 

@@ -147,7 +147,7 @@ sub handler {
 
   $self->warn("{Controller}[Filter]{start}1");
   my $filter = $name->new(gate=>$gate, map {($_, $self->{uc $_})} 
-	qw(document_root script_name secret template errors
+	qw(document_root script custom secret template errors
 	dbis ua logger dbis r default_actions));
   return $self->send_status_page(404) unless $filter;
   $self->warn("{Controller}[Filter]{end}1");
@@ -198,7 +198,7 @@ sub handler {
   $ARGS->{_gmime}  = $self->{CHARTAGS}->{$tag}->{"Content_type"};
   $r->{"headers_out"}->{"Content-Type"} = $ARGS->{_gmime};
   $ARGS->{_gtype}      = $self->{CHARTAGS}->{$tag}->{Short};
-  $ARGS->{g_script}    = $self->{SCRIPT_NAME};
+  $ARGS->{g_script}    = $self->{SCRIPT};
   $ARGS->{g_scriptfull}= $self->get_scriptfull();
   $ARGS->{g_query_string}= $self->get_query_string();
   $ARGS->{g_json_url}  = $self->get_json_url();
@@ -251,6 +251,8 @@ sub handler {
 
   if ($actionHash->{upload}) {
     $self->warn("{Controller}[Upload]{start}1");
+# uploads => {html_field => [args_field, upload_dir]}
+# in GO, html_field=args_field
     while (my ($field, $value) = each %{$actionHash->{upload}}) {
       my $field_new = shift @$value;
       my $dir = $self->{UPLOADDIR};

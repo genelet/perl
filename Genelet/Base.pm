@@ -19,6 +19,7 @@ __PACKAGE__->setup_accessors(
   storage=> undef,
   db     => [],
   chartags      => {},
+  custom        => {},
   template      => '',
   document_root => '',
   project       => '',

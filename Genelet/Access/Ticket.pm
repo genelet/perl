@@ -261,21 +261,21 @@ sub plain_page {
 ~;
 }
 
-sub get_login_cookie {
+sub set_login_cookie {
   my $self = shift;
 
 # @_ is login, password, and url
-  return $self->authenticate(@_) || $self->_get_login_cookie();
+  return $self->authenticate(@_) || $self->_set_login_cookie();
 }
 
-sub get_login_cookie_as {
+sub set_login_cookie_as {
   my $self = shift;
 
 # @_ is id
-  return $self->authenticate_as(@_) || $self->_get_login_cookie();
+  return $self->authenticate_as(@_) || $self->_set_login_cookie();
 }
 
-sub _get_login_cookie {
+sub _set_login_cookie {
   my $self = shift;
 
   my $hash = $self->{OUT_HASH};
@@ -288,6 +288,7 @@ sub _get_login_cookie {
     $i++;
   }
 
+$self->{LOGGER}->info($fields);
   my $signed = $self->signature($fields);
   $self->set_cookie($self->{SURFACE}."_", $signed);
   $self->set_cookie($self->{SURFACE}, $signed, $self->{MAX_AGE}) if $self->{MAX_AGE};
