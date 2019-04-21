@@ -95,7 +95,7 @@ sub another_object {
   }
 
 =pod
-  my @pars = map {$self->{uc $_}} (qw(sortby sortreverse pageno rowcount totalno max_pageno field));
+  my @pars = map {$self->{uc $_}} (qw(sortby sortreverse pageno rowcount totalno maxpageno field));
   my $args;
   while (my ($key, $value) = each %{$self->{ARGS}}) {
     $args->{$key} = $value unless (grep {$key eq $_} @pars);

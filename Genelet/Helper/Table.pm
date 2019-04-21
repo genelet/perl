@@ -102,7 +102,7 @@ sub before {
 #	my \$err  = \$self->SUPER::before(\@_);
 #	return \$err if \$err;
 
-#   my ($form, $extra, $nextextras) = @_;
+#   my (\$form, \$extra, \$nextextras) = \@_;
 
 #	my \$ARGS   = \$self->{ARGS};
 #	my \$r      = \$self->{R};
@@ -117,12 +117,13 @@ sub after {
 #	my \$err  = \$self->SUPER::after(\@_);
 #	return \$err if \$err;
 
+#	my (\$form) = \@_;
+
 #	my \$ARGS   = \$self->{ARGS};
 #	my \$r      = \$self->{R};
 #	my \$who    = \$ARGS->{g_role};
 #	my \$action = \$ARGS->{g_action};
 
-#	my (\$form, \$lists) = \@_;
 
 	return;
 }

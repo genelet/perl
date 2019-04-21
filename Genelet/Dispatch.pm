@@ -13,6 +13,7 @@ package Genelet::Dispatch;
 
 use Data::Dumper;
 use strict;
+use utf8;
 use JSON;
 #use DBI;
 #use File::Find;
@@ -74,7 +75,8 @@ sub init {
     open(my $fh, '<', $json) or die "When open $json $!";
     my $json_text = <$fh>;
     close($fh);
-    my $component = decode_json( $json_text );
+    #my $component = decode_json( $json_text );
+    my $component = JSON->new->utf8(0)->decode( $json_text );
     die "Incorrect json configuration for $json." unless $component;
     $Storage->{$c} = $component;
   } 
