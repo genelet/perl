@@ -336,7 +336,7 @@ sub insert {
 
   if ($self->{CURRENT_ID_AUTO}) {
     $field_values->{$self->{CURRENT_ID_AUTO}} = $self->last_insertid();
-    $self->{ARGS}->{$self->{CURRENT_ID_AUTO}} ||= $field_values->{$self->{CURRENT_ID_AUTO}};
+    $self->{ARGS}->{$self->{CURRENT_ID_AUTO}} = $field_values->{$self->{CURRENT_ID_AUTO}};
   }
   $self->{LISTS} = [$field_values];
 
@@ -515,8 +515,8 @@ sub get_order_string {
   my $ARGS = $self->{ARGS};
   my $column = $ARGS->{$self->{SORTBY}};
   unless ($column) {
-    return "";
-#    $column = (ref($self->{CURRENT_KEY}) eq 'ARRAY') ? join(',', @{$self->{CURRENT_KEY}}) : $self->{CURRENT_KEY};
+    #return "";
+    $column = (ref($self->{CURRENT_KEY}) eq 'ARRAY') ? join(',', @{$self->{CURRENT_KEY}}) : $self->{CURRENT_KEY};
   }
   $column = ($self->{CURRENT_TABLES}->[0]->{alias} || $self->{CURRENT_TABLES}->[0]->{name}) . ".$column" if ($self->{CURRENT_TABLES} && $column !~ /\./);
   my $order = "ORDER BY $column";
