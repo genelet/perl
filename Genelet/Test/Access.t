@@ -29,10 +29,11 @@ use Test::More tests=>20;
 my $a = Access->new(
 	secret => "12345",
 	coding => "67890",
-    probe   => 'probe',
-    surface => 'surface',
-    redirect => 'http://www.foo.bar/handler?redirect_with_question'
+	probe   => 'probe',
+	surface => 'surface',
+	script => 'http://www.foo.bar/handler'
 );
+	#redirect => 'http://www.foo.bar/handler?redirect_with_question'
 
 $ENV{HTTP_COOKIE} = "x=a; y=b; z=c";
 ok($a->get_cookie("y") eq "b", "get cookie");
@@ -50,12 +51,12 @@ ok($hash->{'X-Forwarded-User'} eq 'name', "user is 'name'");
 
 $ENV{REQUEST_URI}  = "http://my.foo.bar/request?z=req_with_quesetion";
 $ENV{QUERY_STRING} = "x=a&y=b";
-$x = $a->forbid(1024,303,'m');
+$x = $a->forbid(1024,'m','e');
 ok(!$x, "redirect is generated");
 $hash = $a->r()->{headers_out};
 ok($hash->{'Content-Type'} eq 'text/html; charset=UTF-8', "content type");
-ok($hash->{'Location'} eq 'http://www.foo.bar/handler?redirect_with_question?go_uri=http%3A%2F%2Fmy.foo.bar%2Frequest%3Fz%3Dreq_with_quesetion%3Fx%3Da%26y%3Db&go_err=1024&role=m', "redirected url address");
-ok($hash->{'Set-Cookie'}->[0] eq 'probe=http%3A%2F%2Fmy.foo.bar%2Frequest%3Fz%3Dreq_with_quesetion%3Fx%3Da%26y%3Db; domain=; path=/', "first cookie");
+ok($hash->{'Location'} eq 'http://www.foo.bar/handler/m/e/login?go_uri=http%3A%2F%2Fmy.foo.bar%2Frequest%3Fz%3Dreq_with_quesetion%3Fx%3Da%26y%3Db&go_err=1024', "redirected url address");
+ok($hash->{'Set-Cookie'}->[0] eq 'go_probe=http%3A%2F%2Fmy.foo.bar%2Frequest%3Fz%3Dreq_with_quesetion%3Fx%3Da%26y%3Db; domain=; path=/', "first cookie");
 ok($hash->{'Set-Cookie'}->[1] eq 'surface=0; domain=; path=/; Max-Age=0; Expires=Fri, 01-Jan-1980 01:00:00 GMT', "second cookie");
 
 $a->send_page("abcdefg");

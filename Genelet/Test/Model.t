@@ -79,7 +79,7 @@ $model->total_force(-1);
 $err = $model->topics();
 ok(!$err, "topics");
 is($ARGS->{totalno}, 99, "total is 99");
-is($ARGS->{max_pageno}, 5, "5 pages");
+is($ARGS->{maxpageno}, 5, "5 pages");
 my $lists = $model->lists();
 for (1..20) {
   is($lists->[$_-1]->{id}, $_, "topic $_");

@@ -2,7 +2,7 @@
 
 use strict;
 use Data::Dumper;
-use Test::More tests => 41;
+use Test::More tests => 40;
 use lib '.';
 use lib '../..';
 use Genelet::Cache;
@@ -95,12 +95,12 @@ my $components = {
 );
 
 my $document_root = $ROOT;
-my $script_name = '/test.fcgi';
+my $script = '/test.fcgi';
 my $action_name = 'action';
 my $cache = Genelet::Cache->new(
     routes=>\%routes,
     document_root=>$document_root,
-    script_name=>$script_name,
+    script=>$script,
     action_name=>$action_name);
 
 my $n = scalar(keys %{$cache->metrix()});
@@ -114,8 +114,7 @@ is($k, 2, "number of expiring pub_slot_delete: 2");
 is($hash->[1]->[0], $TMP, "pub_slot_delete 1: 0");
 is($hash->[1]->[3]->[0],'pub', "pub_slot_delete 1: 3");
 is($hash->[1]->[4], 'pubid',   "pub_slot_delete 1: 4");
-is($hash->[1]->[5]->[0],'slot',"pub_slot_delete 1: 5");
-is($hash->[1]->[6], 'slotid',  "pub_slot_delete 1: 6");
+ok((($hash->[1]->[5]->[0] eq 'slot') and ($hash->[1]->[6] eq 'slotid')) or (($hash->[1]->[5]->[0] eq 'site') and ($hash->[1]->[6] eq 'siteid')), "pub_slot_delete 1: 5" . " and " . "pub_slot_delete 1: 6");
 
 $hash = $cache->metrix()->{pub_site_edit};
 is($hash->{timeout}, 3600, "pub_site_edit caching time 3600");
@@ -127,7 +126,7 @@ is($hash->{path}->[3]->[0],'site',"pub_site_edit path: 3");
 is($hash->{path}->[4], 'siteid',  "pub_site_edit path: 4");
 
 is($cache->document_root(), $document_root, "document root: $document_root");
-is($cache->script_name(), $script_name, "script_name: $script_name");
+is($cache->script(), $script, "script: $script");
 is($cache->action_name(), $action_name, "action_name: $action_name");
 
 ok($cache->has_role($TMP.'page/1_js.js', 'web'), $TMP.'page/1_js.js has role called web');
@@ -136,8 +135,8 @@ ok(!$cache->has_role($TMP.'page/1_js.js', 'page'), $TMP.'page/1_js.js does not h
 ok(!$cache->has_role($TMP.'page/1_js.js', 'js'), $TMP.'page/1_js.js does not have role called js');
 ok(!$cache->has_role($TMP.'page/1_js.js', 'pub'), $TMP.'page/1_js.js does not have role called pub');
 ok(!$cache->has_role($TMP.'page/1_js.js', 'adv'), $TMP.'page/1_js.js does not have role called adv');
-
-is($cache->rewrite($TMP.'pub/111/site/222/333_e.html'), $script_name.'/pub/e/site?'.$action_name.'=edit&siteid=222&pubid=111&_gtype=html', "rewrite ok");
+ok(($cache->rewrite($TMP.'pub/111/site/222/333_e.html') eq $script.'/pub/e/site?'.$action_name.'=edit&siteid=222&pubid=111&_gtype=html') or
+($cache->rewrite($TMP.'pub/111/site/222/333_e.html') eq $script.'/pub/e/site?'.$action_name.'=edit&pubid=111&siteid=222&_gtype=html'), "rewrite ok");
 
 my $ARGS = {
 	_grole=>'pub',

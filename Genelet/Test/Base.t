@@ -17,10 +17,10 @@ my $r = CGI->new();
 $r->param(-name=>'action', -value=>'insert');
 
 my ($root, $script, $tmpl) = qw(root script tmpl);
-my $base = Genelet::Base->new(r=>$r, document_root=>$root, script_name=>$script);
+my $base = Genelet::Base->new(r=>$r, document_root=>$root, script=>$script);
 
 ok($base->document_root() eq $root, "getter in document_root");
-ok($base->script_name() eq $script, "getter in script_name");
+ok($base->script() eq $script, "getter in script");
 $base->template($tmpl);
 ok($base->template() eq $tmpl, "setter in template");
 my $new_r = $base->r();
@@ -72,7 +72,7 @@ my %errors  = (
 	1055 => "Signature not found.",
 
 	1060 => "Email Server, Sender, From, To and Subject must be existing.",
-	1061 => "Email message is empty.",
+	1061 => "Message is empty.",
 	1062 => "Sending mail failed.",
 	1063 => "Mail server not reachable.",
 
