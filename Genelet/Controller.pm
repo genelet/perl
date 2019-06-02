@@ -3,7 +3,7 @@ package Genelet::Controller;
 use strict;
 use URI::Escape;
 use Storable qw(dclone);
-#use DBI ();
+use DBI ();
 use JSON;
 use Data::Dumper;
 use Genelet::Base;

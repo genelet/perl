@@ -15,6 +15,9 @@ use Data::Dumper;
 use strict;
 use utf8;
 use JSON;
+
+use Encode qw(decode encode);
+
 #use DBI;
 #use File::Find;
 #use Data::Dumper;
@@ -148,7 +151,7 @@ Logout Domain Path Max_age)) {
   my $cache = Genelet::Cache->new(
     routes        => $config->{Static},
     document_root => $config->{cache_root}||$config->{document_root},
-    script_name   => $config->{script_name},
+    script        => $config->{script},
     action_name   => $config->{action_name}
   ) if $config->{Static};
   $c->cache($cache) if $cache;
@@ -183,7 +186,8 @@ sub run {
 }
 
 sub run_test {
-  my $config = shift;
+  my ($request, $ip, $config, $lib, $comps) = @_;
+
   unless (ref($config) eq 'HASH') {
     local $/;
     open( my $fh, '<', $config) or die $!;
@@ -192,15 +196,46 @@ sub run_test {
     $config = decode_json( $json_text );
     die "No configuration." unless $config;
   }
-
-  my ($cgi, $c) = init($config, @_);
+  my ($cgi, $c) = init($config, $lib, $comps);
 
   open my $saved_stdout, ">&STDOUT" or die "Can't dup STDOUT: $!";
   close STDOUT;
   my $output = "";
   open STDOUT, '>', \$output or die $!;
 
-  my $r = CGI->new($ENV{QUERY_STRING});
+  my $uri = $request->uri();
+
+  my $pathinfo = $uri->path();
+  my $n = length($config->{Script});
+  die "Wrong path info" unless ($config->{Script} eq substr($pathinfo, 0, $n));
+  $pathinfo = substr($pathinfo, $n, length($pathinfo)-$n);
+  %ENV = (
+  'DOCUMENT_ROOT' => $config->{Document_root},
+  'REQUEST_METHOD' => $request->method(),
+  'REQUEST_URI' => $uri->path_query(),
+  'HTTP_HOST' => $uri->host(),
+  'PATH_INFO' => $pathinfo,
+  'REMOTE_ADDR' => $ip,
+  'SCRIPT_NAME' => $config->{Script},
+  'QUERY_STRING' => $uri->query(),
+  'HTTP_COOKIE' => $request->header("Cookie")
+  );
+
+  my $r = $cgi->new($ENV{QUERY_STRING});
+  if ($ENV{REQUEST_METHOD} eq "POST") {
+    my $body = decode('UTF-8', $request->content(), Encode::FB_CROAK);
+    if ($request->header("Content-Type") eq "application/x-www-form-urlencoded") {
+      my $body = decode('UTF-8', $request->content(), Encode::FB_CROAK);
+	  my @items = split('&', $body, -1);
+      for my $item (@items) {
+        my @two = split('=', $item, 2);
+        $r->append(-name=>$two[0], -values=>$two[1]);
+      }
+    } else {
+      $r->param('POSTDATA') = $body;
+    }
+  }
+
   $c->r($r);
   $c->run();
 
