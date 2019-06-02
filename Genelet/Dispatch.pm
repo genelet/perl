@@ -15,7 +15,7 @@ use Data::Dumper;
 use strict;
 use utf8;
 use JSON;
-
+use URI::Escape;
 use Encode qw(decode encode);
 
 #use DBI;
@@ -223,13 +223,13 @@ sub run_test {
 
   my $r = $cgi->new($ENV{QUERY_STRING});
   if ($ENV{REQUEST_METHOD} eq "POST") {
-    my $body = decode('UTF-8', $request->content(), Encode::FB_CROAK);
+    my $body = decode('UTF-8', $request->content());
     if ($request->header("Content-Type") eq "application/x-www-form-urlencoded") {
-      my $body = decode('UTF-8', $request->content(), Encode::FB_CROAK);
 	  my @items = split('&', $body, -1);
       for my $item (@items) {
         my @two = split('=', $item, 2);
-        $r->append(-name=>$two[0], -values=>$two[1]);
+        my $v = uri_unescape($two[1]); $v =~ s/\+/ /g;
+        $r->append(-name=>$two[0], -values=>$v);
       }
     } else {
       $r->param('POSTDATA') = $body;
