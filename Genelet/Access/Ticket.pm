@@ -199,9 +199,9 @@ sub template_page {
 
   my $rest = $go_uri;
   my $ext;
-  my $len = length($self->{SCRIPT_NAME});
-  if (substr($rest, 0, $len) eq $self->{SCRIPT_NAME}) {
-    substr($rest, 0, length($self->{SCRIPT_NAME})) = '';
+  my $len = length($self->{SCRIPT});
+  if (substr($rest, 0, $len) eq $self->{SCRIPT}) {
+    substr($rest, 0, length($self->{SCRIPT})) = '';
     my @a = split /\//, $rest;
     for (@a) {
       return if (/^\./);
@@ -221,7 +221,7 @@ sub template_page {
 	{
 	error       =>$err,
 	errorstr    =>$self->error_str($err),
-	script_name =>$self->{SCRIPT_NAME},
+	script      =>$self->{SCRIPT},
 	Login_name  =>$self->{LOGIN_NAME},
 	go_uri      =>$go_uri,
 	role        =>$role,
@@ -247,17 +247,33 @@ sub plain_page {
   my ($err, $go_uri, $role) = @_;
 
   my $str = $self->error_str($err);
-  $str = qq~<html><head><title>Sign In</title><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8"><META HTTP-EQUIV="Expires" CONTENT="Mon, 01 Jan 1990 20:52:26 GMT"><link rel="stylesheet" type="text/css" href="/style/style.css" title="style" /></head><body><div id="main"> <div id="header"> <div id="logo"> <div id="logo_text"><h1><a href="/">log<span class="logo_colour">in</span></a></h1><h2>Access Control</h2></div></div></div><div id="content_header"></div><div id="site_content"><div id="content"><h1>$str</h1>
+  $str = qq~<html>
+<head>
+<title>Sign In</title>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<META HTTP-EQUIV="Expires" CONTENT="Mon, 01 Jan 1990 20:52:26 GMT">
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif">
+<h2>Sign In</h2>
+<h4><a href="/">Back to Home</a></h4>
+<em>$str</em>
 ~;
   if ($go_uri) {
     my $c0 = $self->{GO_URI_NAME};
     my $c1 = $self->{CREDENTIAL}->[0];
     my $c2 = $self->{CREDENTIAL}->[1];
-    $str .= qq~ <FORM METHOD="POST"><INPUT TYPE="HIDDEN" NAME="$c0" VALUE="$go_uri"><div class="form_settings"><p><span class=fixed>Login</span><INPUT class=contact TYPE="TEXT"     NAME="$c1" /></p><p><span class=fixed>Password</span><INPUT class=contact TYPE="PASSWORD" NAME="$c2" /></p><p style="padding-top: 15px"><span class=fixed>&nbsp;</span><p></p><INPUT class="submit" TYPE="SUBMIT" VALUE=" Sign In " /></p></div></FORM>
+    $str .= qq~ <FORM METHOD="POST"><INPUT TYPE="HIDDEN" NAME="$c0" VALUE="$go_uri">
+<pre>
+   Login: <INPUT style="margin:2px; padding:2px" TYPE="TEXT"  NAME="$c1" />
+Password: <INPUT style="margin:2px; padding:2px" TYPE="PASSWORD" NAME="$c2" />
+
+          <button TYPE="SUBMIT"> Sign In </button>
+</pre>
+</FORM>
 ~;
   }
 
-  return $str . qq~<p><br /></p></div></div><div id="content_footer"></div></div></body></html>
+  return $str . qq~</body></html>
 ~;
 }
 
