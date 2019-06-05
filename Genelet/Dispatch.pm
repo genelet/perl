@@ -120,7 +120,8 @@ Logout Domain Path Max_age)) {
     }
     $pars{role_value} = $role;
     $gates->{$role} = Genelet::Access::Gate->new(%base, %pars);
-    while (my ($provider, $issuer) = each %{$item->{Issuers}}) {
+    for my $provider (keys %{$item->{Issuers}}) {
+      my $issuer = $item->{Issuers}->{$provider};
       my %last;
       $last{attributes} = $item->{Attributes};
       $last{provider} = $provider;
@@ -161,15 +162,7 @@ Logout Domain Path Max_age)) {
 
 sub run {
   my $config = shift;
-  unless (ref($config) eq 'HASH') {
-    local $/;
-    open( my $fh, '<', $config) or die $!;
-    my $json_text = <$fh>;
-    close($fh);
-    $config = decode_json( $json_text );
-    die "No configuration." unless $config;
-  }
-
+  $config = get_hash($config) unless (ref($config) eq 'HASH');
   my ($cgi, $c) = init($config, @_);
 
   unless ($_[3]) {
@@ -185,17 +178,23 @@ sub run {
   return;
 }
 
+sub get_hash {
+  my $config = shift;
+
+  local $/;
+  open( my $fh, '<', $config) or die $!;
+  my $json_text = <$fh>;
+  close($fh);
+  my $c = decode_json( $json_text );
+  die "No configuration." unless $c;
+
+  return $c;
+}
+
 sub run_test {
   my ($request, $ip, $config, $lib, $comps) = @_;
 
-  unless (ref($config) eq 'HASH') {
-    local $/;
-    open( my $fh, '<', $config) or die $!;
-    my $json_text = <$fh>;
-    close($fh);
-    $config = decode_json( $json_text );
-    die "No configuration." unless $config;
-  }
+  $config = get_hash($config) unless (ref($config) eq 'HASH');
   my ($cgi, $c) = init($config, $lib, $comps);
 
   open my $saved_stdout, ">&STDOUT" or die "Can't dup STDOUT: $!";

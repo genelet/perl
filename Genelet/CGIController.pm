@@ -77,7 +77,7 @@ sub login {
   my $t = $self->{DBIS}->{$role};
   unless ($t) {
     $self->warn("{CGIController}[OK]{fail}1");
-    $self->send_status_page(404, "Role Not Found");
+    $self->send_status_page(404, "Role *$role* Not Found");
     return;
   }
   my $provider = $r->param($self->{PROVIDER_NAME});
