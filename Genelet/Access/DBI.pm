@@ -25,7 +25,7 @@ sub authenticate {
   push(@$in_vals, $self->get_referer()) if ($self->{SCREEN} & 4);
   push(@$in_vals, $uri)                 if ($self->{SCREEN} & 8);
 
-  return $self->run_sql($self->{SQL}, $in_vals) || $self->_authentication();
+  return $self->run_sql($self->{SQL}, $in_vals) || $self->_authentication($login);
 }
 
 sub authenticate_as {
@@ -33,12 +33,19 @@ sub authenticate_as {
   my ($login) = @_;
 
   my $in_vals = [$login];
-  return $self->run_sql($self->{SQL_AS}, $in_vals) || $self->_authentication();
+  return $self->run_sql($self->{SQL_AS}, $in_vals) || $self->_authentication($login);
 }
 
 sub _authentication {
   my $self = shift;
+  my $login = shift;
 
+  for my $k (@{$self->{ATTRIBUTES}}) {
+    if ($k eq $self->{CREDENTIAL}->[0]) {
+      $self->{OUT_HASH}->{$k} = $login;
+      last;
+    }
+  }
   my $out_pars = $self->{OUT_PARS} || $self->{ATTRIBUTES};
   my $out_hash = $self->{OUT_HASH};
 
