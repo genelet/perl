@@ -85,6 +85,7 @@ my $err = $base->dir_all()
 	|| $base->write_it("logs/debug.log", "")
 	|| $base->write_it("lib/".ucfirst(lc $project)."/Model.pm", $base->project_model())
 	|| $base->write_it("lib/".ucfirst(lc $project)."/Filter.pm", $base->project_filter())
+	|| $base->write_it("lib/".ucfirst(lc $project)."/Beacon.pm", $base->project_beacon())
 	|| $base->write_it("views/admin/login.html", $base->login())
 	|| $base->write_it("views/admin/error.html", $base->error())
 	|| $base->write_it("views/public/error.html", $base->error());

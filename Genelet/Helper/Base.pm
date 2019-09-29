@@ -275,6 +275,38 @@ exit;
 `;
 }
 
+sub beancon {
+    my $self = shift;
+
+    my @arr;
+    for my $t (@{$self->{TABLES}}) {
+        my ($obj, $cls) = $self->_objcls($t);
+        push @arr, $cls;
+    }
+    my $comp = '"'.join('", "', @arr).'"';
+
+    return qq`package `.ucfirst(lc $self->{PROJECT}).qq`::Beacon;
+
+use strict;
+use Genelet::Dispatch;
+use Genelet::Beacon;
+
+use vars qw(\@ISA);
+\@ISA = qw(Genelet::Beacon);
+
+__PACKAGE__->setup_accessors(
+  config => Genelet::Dispatch::get_hash("`.$self->{ROOT}.qq`/conf/config.json"),
+  lib    => "`.$self->{ROOT}.qq`/lib",
+  ip     => "127.0.0.1",
+  comps  => [$comp],
+  tag    => "html",
+  header => {"Content-Type" => "application/x-www-form-urlencoded", "Cookie" => "go_probe=1"}
+);
+
+1;
+`;
+}
+
 sub project_filter {
 	my $self = shift;
 
