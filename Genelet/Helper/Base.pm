@@ -275,7 +275,7 @@ exit;
 `;
 }
 
-sub project_beancon {
+sub project_beacon {
     my $self = shift;
 
     my @arr;
