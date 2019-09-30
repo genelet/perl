@@ -35,12 +35,118 @@ sub setup : Test(setup) {
   return;
 }
 
-sub ba_preset : Test(no_plan) {
+sub bf_after : Test(no_plan) {
   my $self = shift;
-  my $lists = $self->{DATA}->{ba_preset};
-  my $filter = $self->{_filter};
+  my $lists = $self->{DATA}->{bf_after};
   return unless ($lists);
 
+  my $filter = $self->{_filter};
+  my $form = $self->{_model};
+  for my $item (@$lists) {
+    my $OTHER = $item->{other};
+    if ($OTHER && @$OTHER) {
+      $form->{OTHER} = $OTHER;
+    }
+    my $LISTS = $item->{lists};
+    if ($LISTS && @$LISTS) {
+      $form->{LISTS} = $LISTS;
+    }
+    $filter->args($item->{input});
+    my $err = $filter->after($form);
+    ok(!$err, "Run after() is successful: $err");
+    my $ARGS = $filter->args();
+    while (my ($k, $v) = each %{$item->{output}}) {
+      is($ARGS->{$k}, $v, "after(): value of $k is $v");
+    }
+    delete $filter->{ARGS};
+  }
+  
+  return;
+}
+
+sub be_after_fail : Test(no_plan) {
+  my $self = shift;
+  my $lists = $self->{DATA}->{be_after_fail};
+  return unless ($lists);
+
+  my $filter = $self->{_filter};
+  my $form = $self->{_model};
+  for my $item (@$lists) {
+    my $OTHER = $item->{other};
+    if ($OTHER && @$OTHER) {
+      $form->{OTHER} = $OTHER;
+    }
+    my $LISTS = $item->{lists};
+    if ($LISTS && @$LISTS) {
+      $form->{LISTS} = $LISTS;
+    }
+    $filter->args($item->{input});
+    my $err = $filter->after($form);
+    is($err, $item->{output}, "Run after() negative is successful: $err");
+    delete $filter->{ARGS};
+  }
+  
+  return;
+}
+
+sub bd_before : Test(no_plan) {
+  my $self = shift;
+  my $lists = $self->{DATA}->{bd_before};
+  return unless ($lists);
+
+  my $filter = $self->{_filter};
+  my $form = $self->{_model};
+  for my $item (@$lists) {
+    my $extra = {};
+    my $nextextras = [];
+    $filter->args($item->{input});
+    my $err = $filter->before($form, $extra, $nextextras);
+    ok(!$err, "Run before() is successful: $err");
+    my $ARGS = $filter->args();
+    while (my ($k, $v) = each %{$item->{output}}) {
+      is($ARGS->{$k}, $v, "before(): value of $k is $v");
+    }
+	if ($item->{extra}) {
+      while (my ($k, $v) = each %{$item->{extra}}) {
+        is($extra->{$k}, $v, "before(): extra $k is $v");
+      }
+    }
+	if ($item->{nextextras}) {
+      for (my $i=0; $i<length(@{$item->{nextextras}}); $i++) {
+        while (my ($k, $v) = each %{$item->[$i]->{nextextras}}) {
+          is($nextextras->[$i]->{$k}, $v, "before(): nextextras of $i, $k is $v");
+        }
+      }
+    }
+    delete $filter->{ARGS};
+  }
+  
+  return;
+}
+
+sub bc_before_fail : Test(no_plan) {
+  my $self = shift;
+  my $lists = $self->{DATA}->{bc_before_fail};
+  return unless ($lists);
+
+  my $filter = $self->{_filter};
+  my $form = $self->{_model};
+  for my $item (@$lists) {
+    $filter->args($item->{input});
+    my $err = $filter->before($form, {}, []);
+    is($err, $item->{output}, "Run before() negative is successful: $err");
+    delete $filter->{ARGS};
+  }
+  
+  return;
+}
+
+sub bb_preset : Test(no_plan) {
+  my $self = shift;
+  my $lists = $self->{DATA}->{bb_preset};
+  return unless ($lists);
+
+  my $filter = $self->{_filter};
   for my $item (@$lists) {
     $filter->args($item->{input});
     my $err = $filter->preset();
@@ -58,13 +164,13 @@ sub ba_preset : Test(no_plan) {
 sub ba_preset_fail : Test(no_plan) {
   my $self = shift;
   my $lists = $self->{DATA}->{ba_preset_fail};
-  my $filter = $self->{_filter};
   return unless ($lists);
 
+  my $filter = $self->{_filter};
   for my $item (@$lists) {
     $filter->args($item->{input});
     my $err = $filter->preset();
-    is($err, $item->{output}, "Run preset() return is successful: $err");
+    is($err, $item->{output}, "Run preset() negative is successful: $err");
     delete $filter->{ARGS};
   }
   
@@ -222,32 +328,70 @@ sub af_insupd : Test(no_plan) {
 1;
 
 =pod
-name is the model name
-aa_inser and ae_delete are for multiple insert and delete records
-ab_edit is search by the first item, and expect the second item
-ac_topics searches all items; the one with the 1st item key matches the second
-ad_update updates by the first item, and expects the seconds
+model: is the model package name
+filter: is the filter package name
+aa_inser and ae_delete: for multiple insert and delete records
+ab_edit: search by the first item, and expect the second item
+ac_topics: searches all items; the one with the 1st item key matches the second
+ad_update: updates by the first item, and expects the seconds
+ba_preset_fail: fail in preset, input args=>error
+bb_preset: in preset, input args=>output args
+bc_before: fail in before, input args=>error
+bd_before: in before, input args=>output args, "extra" hash, and "nextextra" arrays of hash
+be_after_fail: fail in after, input args, lists, other=>error
+bf_after: in after, input args, lists, other=>output hash
 {
-	"name":"Gmarket::Admin::Model",
-	"aa_insert" : [
-	    {"adminid":"30","login":"x","passwd":"y","status":"Yes"},
-	    {"adminid":"20","login":"xx","passwd":"xy","status":"Yes"}
-	],
-	"ab_edit": [
-	    {"login":"x"},
-	    {"adminid":"30","login":"x","passwd":"y","status":"Yes"}
-	],
-	"ac_topics": [
-	    {"login":"x"},
-	    {"adminid":"30","login":"x","passwd":"y","status":"Yes"}
-	],
-	"ad_update": [
-	    {"login":"x", "passwd":"z"},
-	    {"adminid":"30","login":"x","passwd":"z","status":"Yes"}
-	],
-	"ae_delete": [
-   	 {"login":"x"},
-   	 {"login":"xx"}
-	]
+"model":"Gmarket::Admin::Model",
+"filter":"Gmarket::Admin::Filter",
+"aa_insert" : [
+	{"adminid":"ACCOUNTING","login":"x","passwd":"y","status":"Yes"},
+	{"adminid":"ACCOUNTING","login":"xx","passwd":"xy","status":"Yes"}
+],
+"ab_edit": [
+	{"login":"x"},
+	{"adminid":"ACCOUNTING","login":"x","passwd":"y","status":"Yes"}
+],
+"ac_topics": [
+	{"login":"x"},
+	{"adminid":"ACCOUNTING","login":"x","passwd":"y","status":"Yes"}
+],
+"ad_update": [
+	{"login":"x", "passwd":"z"},
+	{"adminid":"ACCOUNTING","login":"x","passwd":"z","status":"Yes"}
+],
+"ae_delete": [
+	{"login":"x"},
+	{"login":"xx"}
+],
+"ba_preset_fail": [
+	{
+		"input":{"adminid":"ACCOUNTING"},
+		"output":"wrong privilege"
+	},
+	{
+		"input":{"adminid":"ROOT","adminlogin":"x","login":"x","g_action":"insert"},
+		"output":"wrong admin"
+	},
+	{
+		"input":{"adminid":"ROOT","adminlogin":"x","login":"y","groups":["ROOT,ACCOUNTING,SUPPORT"],"g_action":"insert"},
+		"output":"wrong privilege"
+	},
+	{
+		"input":{"adminid":"ROOT","adminlogin":"x","login":"y","groups":["ACCOUNTING,SUPPORT"],"passwd":"a_","g_action":"insert"},
+		"output":"wrong passwd"
+	}
+],
+"bb_preset": [
+	{
+		"input":{"adminid":"ROOT","login":"aaaa","passwd":"bbbbbbbbb","groups":["ACCOUNTING","SUPPORT"],"g_action":"insert"},
+		"output":{"adminid":"ACCOUNTING,SUPPORT"}
+	}
+],
+"bf_after": [
+	{
+		"input":{"g_action":"insert","old_adminid":"ROOT"},
+		"output":{"g_action":"insert","adminid":"ROOT"}
+	}
+]
 }
 =cut
