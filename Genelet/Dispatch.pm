@@ -185,7 +185,8 @@ sub get_hash {
   open( my $fh, '<', $config) or die $!;
   my $json_text = <$fh>;
   close($fh);
-  my $c = decode_json( $json_text );
+  #my $c = decode_json( $json_text );
+  my $c = JSON->new->utf8(0)->decode( $json_text );
   die "No configuration." unless $c;
 
   return $c;
