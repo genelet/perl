@@ -148,7 +148,7 @@ sub handler {
   $self->warn("{Controller}[Filter]{start}1");
   my $filter = $name->new(gate=>$gate, map {($_, $self->{uc $_})} 
 	qw(document_root script custom secret template errors
-	dbis ua logger dbis r default_actions));
+	dbis ua logger r default_actions));
   return $self->send_status_page(404) unless $filter;
   $self->warn("{Controller}[Filter]{end}1");
   for my $att (qw(actions fks escs blks)) {

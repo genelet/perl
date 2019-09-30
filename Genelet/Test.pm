@@ -23,12 +23,51 @@ sub setup : Test(setup) {
   $self->{COMPONENT} = Genelet::Dispatch::get_hash($hash->{component});
 
   my $dbh = DBI->connect(@{$self->{CONFIG}->{Db}}) or return;
-  my $name = $self->{DATA}->{name};
-  $self->{_model} = $name->new(dbh=>$dbh);
+  my $model = $self->{DATA}->{model};
+  $self->{_model} = $model->new(dbh=>$dbh);
   for my $k (qw(nextpages current_table current_key current_id_auto key_in empties fields insert_pars topics_pars edit_pars update_pars insupd_pars)) {
     $self->{_model}->$k($self->{COMPONENT}->{$k});
   }
 
+  my $filter = $self->{DATA}->{filter};
+  $self->{_filter} = $filter->new(ACTIONS=>$self->{COMPONENT}->{actions});
+
+  return;
+}
+
+sub ba_preset : Test(no_plan) {
+  my $self = shift;
+  my $lists = $self->{DATA}->{ba_preset};
+  my $filter = $self->{_filter};
+  return unless ($lists);
+
+  for my $item (@$lists) {
+    $filter->args($item->{input});
+    my $err = $filter->preset();
+    ok(!$err, "Run preset() is successful: $err");
+    my $ARGS = $filter->args();
+    while (my ($k, $v) = each %{$item->{output}}) {
+      is($ARGS->{$k}, $v, "preset(): value of $k is $v");
+    }
+    delete $filter->{ARGS};
+  }
+  
+  return;
+}
+
+sub ba_preset_fail : Test(no_plan) {
+  my $self = shift;
+  my $lists = $self->{DATA}->{ba_preset_fail};
+  my $filter = $self->{_filter};
+  return unless ($lists);
+
+  for my $item (@$lists) {
+    $filter->args($item->{input});
+    my $err = $filter->preset();
+    is($err, $item->{output}, "Run preset() return is successful: $err");
+    delete $filter->{ARGS};
+  }
+  
   return;
 }
 
@@ -42,18 +81,9 @@ sub aa_insert : Test(no_plan) {
   my $keyname = $self->{COMPONENT}->{current_key};
 
   for my $item (@$lists) {
-    my $args;
-    while (my ($k, $v) = each %$item) {
-      $args->{$k} = $v;
-    }
-    $model->args($args); 
+    $model->args($item); 
     my $err = $model->insert();
     ok(!$err, "Run insert() is successful: $err");
-    next if $err;
-	my $id_auto = $self->{COMPONENT}->{current_id_auto};
-    if ($id_auto) {
-      $args->{$id_auto} = $model->last_insertid();
-    }
     delete $model->{ARGS};
   }
 
