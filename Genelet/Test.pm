@@ -31,6 +31,10 @@ sub setup : Test(setup) {
 
   my $filter = $self->{DATA}->{filter};
   $self->{_filter} = $filter->new(ACTIONS=>$self->{COMPONENT}->{actions});
+  for my $k (qw(document_root script custom secret template errors
+	ua logger r default_actions)) {
+    	$self->{_filter}->$k($self->{CONFIG}->{ucfirst $k});
+  }
 
   return;
 }

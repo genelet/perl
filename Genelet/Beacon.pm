@@ -1,7 +1,7 @@
 package Genelet::Beacon;
 
 use strict;
-#use Data::Dumper;
+use Data::Dumper;
 use HTTP::Request::Common;
 use HTTP::Response;
 use Genelet::Dispatch;
@@ -40,7 +40,8 @@ sub update_cookie {
 
 sub random_tag {
   my $self = shift;
-  while (my ($tag, $v) = each %{$self->{CONFIG}->{Chartags}}) {
+  for my $tag (keys %{$self->{CONFIG}->{Chartags}}) {
+    my $v = $self->{CONFIG}->{Chartags}->{$tag};
     if ($v->{"Content_type"} =~ /text\/html/i) {
       return $tag;
     }
@@ -78,7 +79,7 @@ sub get_credential {
   my $role = shift;
   my $login = shift;
   my $passwd = shift;
-  die "No password for $login of role $role." unless ($passwd);
+  return "No password for $login of role $role." unless $passwd;
 
   my $c = $self->{CONFIG};
   my $go_uri = $c->{Go_uri_name} || "go_uri";
@@ -86,15 +87,20 @@ sub get_credential {
   my $obj_role = $c->{Roles}->{$role};
   my $surface = $obj_role->{Surface};
   my ($field_login, $field_passwd);
-  while (my ($provider, $v) = each %{$obj_role->{Issuers}}) { 
+  for my $provider (keys %{$obj_role->{Issuers}}) {
+    my $v = $obj_role->{Issuers}->{$provider};
     $field_login = $v->{Credential}->[0];
     $field_passwd = $v->{Credential}->[1];
     last if $v->{Default};
-  } 
+  }
+  my $tag = $self->random_tag();
+  my $orig = $self->{TAG};
+  $self->{TAG} = $tag;
   my $resp = $self->post_mockup($role, $c->{Login_name} || "login", [
-    $go_uri=>$c->{Script}."/$role/".$self->random_tag()."/".lc($self->{COMPS}->[0]),
+    $go_uri=>$c->{Script}."/$role/$tag/".lc($self->{COMPS}->[0]),
     $field_login=>$login,
     $field_passwd=>$passwd]);
+  $self->{TAG} = $orig;
   if ($resp->code() == 303) {
     my @cookies = $resp->header("Set-Cookie");
     for my $cookie (@cookies) {
