@@ -124,7 +124,7 @@ sub call_once {
   my $marker = $page->{model};
   $marker =~ s/\:\:/_/g;
   $marker .= "_".$action;
-  return if $self->{OTHER}->{$marker};
+  return if ($page->{ignore} and $self->{OTHER}->{$marker});
 
   my $err = $p->$action($extra, @_);
   return $err if $err;
