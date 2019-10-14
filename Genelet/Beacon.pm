@@ -16,6 +16,7 @@ __PACKAGE__->setup_accessors(
   ip     => '',
   comps  => [],
   tag    => '',
+  role   => '',
   header => {'Content-Type' => "application/x-www-form-urlencoded"}
 );
 
@@ -52,7 +53,8 @@ sub random_tag {
 
 sub get_mockup {
   my $self = shift;
-  my ($role, $obj, $query) = @_;
+  my ($obj, $query) = @_;
+  my $role = $self->{ROLE};
 
   my $s_url = $self->{CONFIG}->{Server_url};
   my $script = $self->{CONFIG}->{Script};
@@ -64,7 +66,8 @@ sub get_mockup {
 
 sub post_mockup {
   my $self = shift;
-  my ($role, $obj, $data) = @_;
+  my ($obj, $data) = @_;
+  my $role = $self->{ROLE};
 
   my $s_url = $self->{CONFIG}->{Server_url};
   my $script = $self->{CONFIG}->{Script};
@@ -76,10 +79,9 @@ sub post_mockup {
 
 sub get_credential {
   my $self = shift;
-  my $role = shift;
-  my $login = shift;
-  my $passwd = shift;
-  return "No password for $login of role $role." unless $passwd;
+  my ($login, $passwd) = @_;
+  return "No password for $login." unless $passwd;
+  my $role = $self->{ROLE};
 
   my $c = $self->{CONFIG};
   my $go_uri = $c->{Go_uri_name} || "go_uri";
@@ -96,7 +98,7 @@ sub get_credential {
   my $tag = $self->random_tag();
   my $orig = $self->{TAG};
   $self->{TAG} = $tag;
-  my $resp = $self->post_mockup($role, $c->{Login_name} || "login", [
+  my $resp = $self->post_mockup($c->{Login_name} || "login", [
     $go_uri=>$c->{Script}."/$role/$tag/".lc($self->{COMPS}->[0]),
     $field_login=>$login,
     $field_passwd=>$passwd]);
