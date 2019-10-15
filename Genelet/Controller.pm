@@ -164,7 +164,7 @@ sub handler {
   for my $par ($r->param()) {
     my @a;
     my %reference;
-    for my $item ($r->param($par)) {
+    for my $item ($r->multi_param($par)) {
       $item =~ s/^\s+//;
       $item =~ s/\s+$//;
       next if ($item eq '' or $reference{$item});
