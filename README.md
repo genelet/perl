@@ -1,4 +1,4 @@
-# perl
+# Genelet
 Perl Version of the Genelet Web Development Framework at http://www.genelet.com
 
 The Perl version of Genelet is nothing more than a collection of well-thought CGI/FCGI packages to develop large-scale web project in a convenience, fast and organized way. While you are still be able to do everything in your own style, the packages are aimed nevertheless to be the most efficient and elegant solutions.
