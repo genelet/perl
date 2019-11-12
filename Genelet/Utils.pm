@@ -8,7 +8,7 @@ use vars qw(@ISA @EXPORT);
 use Exporter;
 @ISA = qw(Exporter);
 
-@EXPORT = qw(ipint ipstr randompw randomsecret unix_from_now now_from_unix day_from_unix usday_from_unix day_for_tomorrow rfc822_time upload_field dimensions bits2total total2bits bits2filters);
+@EXPORT = qw(ipint ipstr randompw randomhex unix_from_now now_from_unix day_from_unix usday_from_unix day_for_tomorrow rfc822_time upload_field dimensions bits2total total2bits bits2filters);
 
 my $quick2 = sub { # 2^n - 1
   my $bit = shift or return 0;
@@ -67,18 +67,18 @@ sub ipstr {
 sub _random {
   my $len = shift;
   my @chars = @_;
-  my $num = scalar scalar @chars;
+  my $num = scalar @chars;
   return join('', map {$chars[$num * rand()]} (1..$len));
 }
 
 sub randompw {
   my $len = shift || 8;
-  return _random($len, ('a'..'z', '0'..'9'));
+  return _random($len, 'a'..'z', '0'..'9');
 }
 
-sub randomsecret {
+sub randomhex {
   my $len = shift || 128;
-  return _random($len, ('a'..'f', '0'..'9'));
+  return _random($len, 'a'..'f', '0'..'9');
 }
 
 sub unix_from_now {

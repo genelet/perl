@@ -27,6 +27,14 @@ __PACKAGE__->setup_accessors(
 	},
 );
 
+sub sign {
+  my $self = shift;
+  my $ARGS   = $self->{ARGS};
+  my ($roleid, $value) = @_;
+
+  return $self->digest($self->{SECRET}, $ARGS->{_gwhen}.$ARGS->{g_role}.$roleid.$value);
+}
+ 
 sub send_blocks {
   my $self = shift;
   my ($lists, $other) = @_;
