@@ -25,6 +25,7 @@ __PACKAGE__->setup_accessors(
   project       => '',
   uploaddir     => '',
   script        => '',
+  pubrole       => '',
 
   secret        => '',
   action_name   => 'action',

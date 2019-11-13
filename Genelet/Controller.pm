@@ -450,7 +450,7 @@ sub handler {
   } else {
     $error = $filter->get_template(\$output, $lists, $other, $action.".".$tag);
   }
-  $self->warn("{Controller}[View]{end}1:",$error);
+  $self->warn("{Controller}[View]{end}1:", $error);
   undef $form;
   return $self->error_page($filter, $ARGS, $error) if $error;
 
@@ -542,6 +542,7 @@ sub _json_data {
       $hash->{included}->{$short} = $v;
     } else {
       $hash->{incoming}->{$k} = $v;
+      delete $hash->{$k};
     }
   }
   if ($other) {

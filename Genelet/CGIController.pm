@@ -207,12 +207,13 @@ sub run {
         $r->{headers_out}->{"Content-Type"} = $chartag->{"Content-Type"};
         if ($chartag->{Short} eq 'jsonp') {
           my $cb = $r->param($self->{CALLBACK_NAME}) || $self->{CALLBACK_NAME};
-          return $self->send_nocache($cb.'("data":"'.$chartag->{challenge}.'"})');
+          return $self->send_nocache($cb.'("data":"'.$chartag->{Challenge}.'"})');
         } else {
+          $r->{headers_out}->{"Content-Type"} = $chartag->{"Content_type"}; 
           $r->{headers_out}->{"Access-Control-Allow-Origin"} = $ENV{HTTP_ORIGIN} || '*';
           $r->{headers_out}->{"Access-Control-Allow-Credentials"} = 'true';
-          $self->warn("{CGIController}[Name]{API}".'{"data":"'.$chartag->{challenge}.'"}');
-          return $self->send_nocache('{"data":"'.$chartag->{challenge}.'"}');
+          $self->warn("{CGIController}[Name]{API}".'{"data":"'.$chartag->{Challenge}.'"}');
+          return $self->send_nocache('{"data":"'.$chartag->{Challenge}.'"}');
         }
       } else {
         return $gate->forbid($status, $role, $tag, $obj);

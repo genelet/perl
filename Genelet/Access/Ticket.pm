@@ -132,11 +132,11 @@ sub handler_fields {
     $r->{headers_out}->{"Content-Type"} = $chartag->{"Content-Type"};
     if ($chartag->{Short} eq 'jsonp') {
       my $callback = $r->param($self->{CALLBACK_NAME}) || $self->{CALLBACK_NAME};
-      return $self->send_nocache($callback.'("data":"'.$chartag->{logged}.'"})');
+      return $self->send_nocache($callback.'({"data":"'.$chartag->{Logged}.'"})');
     } else {
       $self->{R}->{headers_out}->{"Access-Control-Allow-Origin"} = $ENV{HTTP_ORIGIN} || '*';
       $self->{R}->{headers_out}->{"Access-Control-Allow-Credentials"} = 'true';
-      return $self->send_nocache('{"data":"'.$chartag->{logged}.'"}');
+      return $self->send_nocache('{"data":"'.$chartag->{Logged}.'"}');
     }
   }
 
@@ -178,11 +178,11 @@ sub loginpage {
     $r->{headers_out}->{"Content-Type"} = $chartag->{"Content-Type"};
     if ($chartag->{Short} eq 'jsonp') {
       my $callback = $r->param($self->{CALLBACK_NAME}) || $self->{CALLBACK_NAME};
-      return $callback.'("data":"'.$chartag->{failed}.'"})';
+      return $callback.'({"data":"'.$chartag->{Failed}.'"})';
     } else {
       $r->{headers_out}->{"Access-Control-Allow-Origin"} = $ENV{HTTP_ORIGIN} || '*';
       $r->{headers_out}->{"Access-Control-Allow-Credentials"} = 'true';
-      return '{"data":"'.$chartag->{failed}.'"}';
+      return '{"data":"'.$chartag->{Failed}.'"}';
     }
   }
 

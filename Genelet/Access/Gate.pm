@@ -23,11 +23,11 @@ sub handler_logout {
     $r->{headers_out}->{"Content-Type"} = $chartag->{"Content_type"};
     if ($chartag->{Short} eq 'jsonp') {
       my $callback = $r->param($self->{CALLBACK_NAME}) || $self->{CALLBACK_NAME};
-      return $self->send_nocache($callback.'("data":"'.$chartag->{logout}.'"})');
+      return $self->send_nocache($callback.'({"data":"'.$chartag->{Logout}.'"})');
     } else {
       $r->{"Access-Control-Allow-Origin"} = $ENV{HTTP_ORIGIN} || '*';
       $r->{"Access-Control-Allow-Credentials"} = 'true';
-      return $self->send_nocache('{"data":"'.$chartag->{logout}.'"}');
+      return $self->send_nocache('{"data":"'.$chartag->{Logout}.'"}');
     }
   }
 

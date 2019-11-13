@@ -73,7 +73,7 @@ sub _random {
 
 sub randompw {
   my $len = shift || 8;
-  return _random($len, 'a'..'z', '0'..'9');
+  return _random($len, 'A'..'Z', 'a'..'z', '.',':','_','(',')','[',']','{','}','*','<','>','?','&','$','#','~','!','@','%','^', '0'..'9');
 }
 
 sub randomhex {
