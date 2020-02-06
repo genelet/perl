@@ -6,7 +6,8 @@ use vars qw(@ISA);
 @ISA = ('Genelet::Accessor');
 
 __PACKAGE__->setup_accessors(
-	dbh => {}
+	dbh => {},
+	affected => 0
 );
 
 sub execute_sth {
@@ -19,6 +20,7 @@ sub execute_sth {
       $self->{LOGGER}->warn($self->{DBH}->errstr()) if $self->{LOGGER};
       die 1073;
     }
+    $self->{AFFECTED} = $rv;
   };
   if ($@) {
     return ($@ =~ /1073/) ? 1073 : 1074;

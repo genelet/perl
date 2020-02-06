@@ -167,7 +167,7 @@ sub call_nextpage {
     }
   }
 
-  if (($p_fk and ref($fk) eq 'ARRAY') or (keys(%$p_item)>1)) {
+  if (($p_fk and ref($fk) eq 'ARRAY') or $p_item) {
     return 1042 if ($p_fk and ref($p_fk) ne 'ARRAY');
     for my $item (@{$self->{LISTS}}) {
       if ($p_fk) {
