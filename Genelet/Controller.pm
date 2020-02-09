@@ -345,6 +345,7 @@ sub handler {
     for my $att (qw(nextpages current_table current_tables current_key current_id_auto key_in fields empties total_force sortby sortreverse pageno rowcount totalno maxpageno edit_pars update_pars insupd_pars insert_pars topics_pars)) {
       $form->$att(ref($ref->{$att}) ? dclone($ref->{$att}) : $ref->{$att}) if exists($ref->{$att});
     }
+    $ARGS->{$form->{EMPTIES}} = $actionHash->{$form->{EMPTIES}} if $actionHash->{$form->{EMPTIES}};
     unless ($actionHash->{"options"} and grep {$_ eq "no_db"} @{$actionHash->{"options"}}) {
       $error = $form->do_sql("SET NAMES 'utf8'") if $self->{DB}->[0] =~ /mysql/i;
       if ($error) {

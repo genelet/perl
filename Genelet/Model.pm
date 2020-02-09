@@ -409,8 +409,9 @@ sub update {
     return $self->process_after('update', @_);
   }
 
+=pod`
   my $empties;
-  if ($self->{EMPTIES} and $self->{ARGS}->{$self->{EMPTIES}}) {
+  if ($self->{ARGS}->{$self->{EMPTIES}}) {
     my @a = split ',', $self->{ARGS}->{$self->{EMPTIES}}, -1;
     for (@a) {
       $_ =~ s/^\s+//g;
@@ -419,6 +420,8 @@ sub update {
     $empties = \@a;
   } 
   my $err = $self->update_hash($field_values, $id, $val, $extra, $empties);
+=cut
+  my $err = $self->update_hash($field_values, $id, $val, $extra, $self->{ARGS}->{$self->{EMPTIES}});
   return $err if $err;
 
   if (ref($id) eq 'ARRAY') {
