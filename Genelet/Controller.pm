@@ -490,7 +490,8 @@ sub error_page {
   } elsif (ref($error) eq 'ARRAY') {
     my $newcode = shift @$error;
     $ARGS->{error}    = $newcode;
-    $ARGS->{errorstr} = $self->error_str($newcode) . join(" ", @$error);
+    #$ARGS->{errorstr} = $self->error_str($newcode) . join(" ", @$error);
+    $ARGS->{errorstr} = join(" ", @$error);
   } else {
     return $self->send_status_page($error) if ($error =~ /^\d+$/ && $error < 1000);
     if ($error =~ /^\d+$/) {

@@ -119,6 +119,19 @@ sub call_once {
   my $page = shift;
   my $extra = shift;
 
+  my $p_manual = $page->{manual};
+  my $p_args   = $page->{args};
+  if ($p_manual) {
+    for (keys %$p_manual) {
+      $extra->{$_} = $p_manual->{$_};
+    }
+  }
+  if ($p_args) {
+    for (@$p_args) {
+      $extra->{$_} = $self->{ARGS}->{$_};
+    }
+  }
+
   my $p = $self->another_object($page);
   my $action = $page->{action};
   my $marker = $page->{model};
@@ -155,6 +168,7 @@ sub call_nextpage {
   my $fk = $self->{CURRENT_KEY};
   my $p_fk     = $page->{relate_fk};
   my $p_item   = $page->{relate_item};
+  my $p_args   = $page->{args};
   my $p_manual = $page->{manual};
 
   my $marker = $page->{model};
@@ -162,8 +176,13 @@ sub call_nextpage {
   $marker .= "_".$action;
 
   if ($p_manual) {
-    while (my ($key, $value) = each %$p_manual) {
-      $new_extra->{$key} = $value;
+    for (keys %$p_manual) {
+      $new_extra->{$_} = $p_manual->{$_};
+    }
+  }
+  if ($p_args) {
+    for (@$p_args) {
+      $new_extra->{$_} = $self->{ARGS}->{$_};
     }
   }
 
