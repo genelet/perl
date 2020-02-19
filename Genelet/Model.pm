@@ -128,6 +128,7 @@ sub call_once {
   }
   if ($p_args) {
     for (@$p_args) {
+      return 1043 unless $self->{ARGS}->{$_};
       $extra->{$_} = $self->{ARGS}->{$_};
     }
   }
@@ -182,6 +183,7 @@ sub call_nextpage {
   }
   if ($p_args) {
     for (@$p_args) {
+      return 1043 unless $self->{ARGS}->{$_};
       $new_extra->{$_} = $self->{ARGS}->{$_};
     }
   }
