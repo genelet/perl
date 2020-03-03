@@ -37,7 +37,7 @@ sub _get_template {
   for my $key (keys %$ARGS) {
     if ($key =~ /^_g(.+)$/) {
       my $real = $1;
-      $hash->{GENELET}->{$real} = $ARGS->{$key} if (grep {$real eq $_} qw(uri role tag component action mime view type idname admin time when group raw));
+      $hash->{GENELET}->{$real} = $ARGS->{$key} if (grep {$real eq $_} qw(uri role tag component obj action mime view type idname admin time when group raw));
     } else {
       $hash->{$key} = $ARGS->{$key};
     }
