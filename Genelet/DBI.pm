@@ -7,6 +7,7 @@ use vars qw(@ISA);
 
 __PACKAGE__->setup_accessors(
 	dbh => {},
+	logger => {},
 	affected => 0
 );
 

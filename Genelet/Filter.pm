@@ -17,6 +17,7 @@ __PACKAGE__->setup_accessors(
 	args => undef,
 	actions => undef,
 	fks => undef,
+	oncepages => undef,
 	escs => undef,
 	blks => undef,
 	blocked    => {
@@ -147,6 +148,14 @@ sub before {
 sub after {
   my $self = shift;
   my ($form) = @_;
+
+  return unless $self->{ONCEPAGES};
+  my $nextpages = $self->{ONCEPAGES}->{$self->{ARGS}->{g_action}} or return;
+
+  foreach my $page (@$nextpages) {
+    my $err = $form->call_once($page);
+    return $err if $err;
+  }
 
   return;
 }

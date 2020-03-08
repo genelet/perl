@@ -151,7 +151,7 @@ sub handler {
 	secret template errors dbis db ua logger r default_actions));
   return $self->send_status_page(404) unless $filter;
   $self->warn("{Controller}[Filter]{end}1");
-  for my $att (qw(actions fks escs blks)) {
+  for my $att (qw(actions fks escs blks oncepages)) {
     my $ref = $self->{STORAGE}->{$save};
     $filter->$att(ref($ref->{$att}) ? dclone($ref->{$att}) : $ref->{$att}) if exists($ref->{$att});
   }
