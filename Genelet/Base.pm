@@ -24,6 +24,8 @@ __PACKAGE__->setup_accessors(
   document_root => '',
   project       => '',
   uploaddir     => '',
+  server_url    => '',
+  blks          => [],
   script        => '',
   pubrole       => '',
 

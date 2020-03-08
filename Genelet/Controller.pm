@@ -145,13 +145,13 @@ sub handler {
   $model   = $self->{PROJECT} . "::$name"."::Model";
   $name    = $self->{PROJECT} . "::$name"."::Filter";
 
-  $self->warn("{Controller}[Filter]{start}1");
+  $self->warn("{Controller}[Filter]{start}1$name");
   my $filter = $name->new(gate=>$gate, map {($_, $self->{uc $_})} 
 	qw(document_root server_url project uploaddir pubrole script custom 
-	secret template errors dbis db ua logger r default_actions));
+	secret template errors dbis db ua logger r default_actions blks));
   return $self->send_status_page(404) unless $filter;
   $self->warn("{Controller}[Filter]{end}1");
-  for my $att (qw(actions fks escs blks oncepages)) {
+  for my $att (qw(actions fks escs oncepages)) {
     my $ref = $self->{STORAGE}->{$save};
     $filter->$att(ref($ref->{$att}) ? dclone($ref->{$att}) : $ref->{$att}) if exists($ref->{$att});
   }
@@ -418,12 +418,14 @@ sub handler {
  
   my $other = $form->other();
 
+  $self->warn("{Controller}[SendBlocks]{start}1");
   $error = $filter->send_blocks($lists, $other);
   if ($self->{STOP_IF_BLOCKS}) {
     return $self->error_page($filter, $ARGS, $error) if $error;
   } else {
     $error = undef;
   }
+  $self->warn("{Controller}[SendBlocks]{end}1");
 
   STARTVIEW:
 

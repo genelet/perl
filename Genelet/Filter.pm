@@ -19,13 +19,6 @@ __PACKAGE__->setup_accessors(
 	fks => undef,
 	oncepages => undef,
 	escs => undef,
-	blks => undef,
-	blocked    => {
-		mail => ['_gmail', 'send_mail'],
-		apns => ['_gapns', 'send_apns'],
-		gcm  => ['_ggcm',  'send_gcm'],
-		sms  => ['_gsms',  'send_sms'],
-	},
 );
 
 sub sign {
@@ -42,32 +35,31 @@ sub send_blocks {
 
   my $err;
 
-  while (my ($MAIL, $value) = each %{$self->{BLOCKED}}) {
-    my $gmail = $value->[0];
-    my $obj = $other->{$gmail};
-    my $send  = $value->[1];
-    my $pars = $self->{BLKS}->{$MAIL};
-    next unless ($pars && $obj);
+  foreach my $gmail (keys %{$self->{BLKS}}) {
+    my $hash = $self->{BLKS}->{$gmail};
+    my $obj  = $other->{$gmail};
+    next unless ($hash && $obj);
     foreach my $envelope ((ref($obj) eq 'ARRAY') ? @{$obj} : $obj) {
-      $self->warn("{Filter}[$MAIL]{start}1");
+      $self->warn("{Filter}[$gmail]{start}1");
       my $outmail = $envelope->{Content};
       if ($outmail) {
-        $self->info("$MAIL has Content");
+        $self->info("$gmail has content");
       } else {
         return 1062 unless $envelope->{File};
-        $self->info("$MAIL Template: ".$envelope->{File});
+        $self->info("$gmail Template: ".$envelope->{File});
         $outmail = '';
-        $err = $self->get_template(\$outmail, $lists, $other, $envelope->{File}, $envelope->{Extra})
-  and return $err;
+        $err = $self->get_template(\$outmail, $lists, $other, $envelope->{File}, $envelope->{Extra});
+		return $err if $err;
       }
       return 1061 unless $outmail;
-      while (my ($key, $val) = each %{$envelope}) {
+      foreach my $key (keys %{$envelope}) {
+        my $val = $envelope->{$key};
         next if (grep {$key eq $_} qw(File Content Callback Extra));
-        $pars->{$key} = $val;
+        $hash->{$key} = $val;
       }
-      $err = $self->$send($pars, $outmail);
+      $err = $self->send_mail($hash, $outmail);
       $envelope->{Callback}->($err) if ($err and $envelope->{Callback});
-      $self->warn("{Filter}[$MAIL]{end}1:",$err);
+      $self->warn("{Filter}[$gmail]{end}1:",$err);
       return $err if $err;
     }
   }
