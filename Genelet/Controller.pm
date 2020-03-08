@@ -358,8 +358,9 @@ sub handler {
   }
 
   my $nextextras = [];
+  my $onceextras = [];
   $self->warn("{Controller}[Before]{start}1");
-  $error = $filter->before($form, $extra, $nextextras);
+  $error = $filter->before($form, $extra, $nextextras, $onceextras);
   $self->warn("{Controller}[Before]{end}1:",$error);
   if ($error) {
     $dbh->disconnect if $dbh;
@@ -400,7 +401,7 @@ sub handler {
   }
 
   $self->warn("{Controller}[After]{start}1");
-  $error = $filter->after($form);
+  $error = $filter->after($form, @$onceextras);
   $self->warn("{Controller}[After]{end}1:",$error);
   $dbh->disconnect if defined($dbh);
 

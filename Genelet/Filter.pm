@@ -140,21 +140,23 @@ sub preset {
 
 sub before {
   my $self = shift;
-  my ($form, $extra, $nextextras) = @_;
+  my ($form, $extra, $nextextras, $onceextras) = @_;
 
   return;
 }
 
 sub after {
   my $self = shift;
-  my ($form) = @_;
+  my $form = shift;
 
   return unless $self->{ONCEPAGES};
   my $nextpages = $self->{ONCEPAGES}->{$self->{ARGS}->{g_action}} or return;
 
+  my $i = 0;
   foreach my $page (@$nextpages) {
-    my $err = $form->call_once($page);
+    my $err = $form->call_once($page, $_[$i]);
     return $err if $err;
+    $i++;
   }
 
   return;
