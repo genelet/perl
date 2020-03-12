@@ -21,6 +21,14 @@ __PACKAGE__->setup_accessors(
 	escs => undef,
 );
 
+sub sign_open {
+  my $self = shift;
+  my $ARGS   = $self->{ARGS};
+  my ($str) = @_;
+
+  return $self->digest($self->{SECRET}, $str, $self->{SECRET});
+}
+
 sub sign {
   my $self = shift;
   my $ARGS   = $self->{ARGS};

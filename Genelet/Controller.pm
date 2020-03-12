@@ -148,7 +148,7 @@ sub handler {
   $self->warn("{Controller}[Filter]{start}1$name");
   my $filter = $name->new(gate=>$gate, map {($_, $self->{uc $_})} 
 	qw(document_root server_url project uploaddir pubrole script custom 
-	secret template errors dbis db ua logger r default_actions blks));
+	secret template errors dbis db ua logger r default_actions blks storage));
   return $self->send_status_page(404) unless $filter;
   $self->warn("{Controller}[Filter]{end}1");
   for my $att (qw(actions fks escs oncepages)) {
