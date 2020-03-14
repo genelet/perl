@@ -555,4 +555,29 @@ sub get_order_string {
   return ($order=~/[;"']/) ? "" : $order;
 }
 
+sub properValue {
+	my $self = shift;
+	my $v = shift;
+	my $extra = shift;
+
+	return $extra->{$v} if defined($extra->{$v});
+	return $self->{ARGS}->{$v};
+}
+
+sub properValues {
+	my $self = shift;
+	my $vs = shift;
+	my $extra = shift;
+
+	my $out = [];
+	for my $v (@$vs) {
+		if (defined($extra->{$v})) {
+			push(@$out, $extra->{$v});
+		} else {	
+			push(@$out, $self->{ARGS}->{$v});
+		}
+	}
+	return $out;
+}
+
 1;

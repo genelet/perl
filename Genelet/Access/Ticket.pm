@@ -96,7 +96,8 @@ sub handler_login {
     $password =~ s/^\s+//g;
     $password =~ s/\s+$//g;
   }
-  my $err = $self->authenticate($login, $password, $uri);
+  #my $err = $self->authenticate($login, $password, $uri);
+  my $err = $self->authenticate($login, $password);
   $self->warn("{Loginout}[Authenticate]{end}1:$err");
   if ($err && ($err < 1000)) {
     return $self->send_status_page($err);

@@ -17,22 +17,25 @@ __PACKAGE__->setup_accessors(
 
 sub authenticate {
   my $self = shift;
-  my ($login, $password, $uri) = @_;
+  #my ($login, $password, $uri) = @_;
 
-  my $in_vals = [$login, $password];
+  #my $in_vals = [$login, $password];
+  my $in_vals = [@_];
   push(@$in_vals, $self->get_ip_int())  if ($self->{SCREEN} & 1);
   push(@$in_vals, $self->get_ua())      if ($self->{SCREEN} & 2);
   push(@$in_vals, $self->get_referer()) if ($self->{SCREEN} & 4);
-  push(@$in_vals, $uri)                 if ($self->{SCREEN} & 8);
+  #push(@$in_vals, $uri)                 if ($self->{SCREEN} & 8);
 
-  return $self->run_sql($self->{SQL}, $in_vals) || $self->_authentication($login);
+  #return $self->run_sql($self->{SQL}, $in_vals) || $self->_authentication($login);
+  return $self->run_sql($self->{SQL}, $in_vals) || $self->_authentication($_[0]);
 }
 
 sub authenticate_as {
   my $self = shift;
   my ($login) = @_;
 
-  my $in_vals = [$login];
+  #my $in_vals = [$login];
+  my $in_vals = [@_];
   return $self->run_sql($self->{SQL_AS}, $in_vals) || $self->_authentication($login);
 }
 

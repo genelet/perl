@@ -145,7 +145,7 @@ sub handler {
   $model   = $self->{PROJECT} . "::$name"."::Model";
   $name    = $self->{PROJECT} . "::$name"."::Filter";
 
-  $self->warn("{Controller}[Filter]{start}1$name");
+  $self->warn("{Controller}[Filter]{start}1");
   my $filter = $name->new(gate=>$gate, map {($_, $self->{uc $_})} 
 	qw(document_root server_url project uploaddir pubrole script custom 
 	secret template errors dbis db ua logger r default_actions blks storage));
