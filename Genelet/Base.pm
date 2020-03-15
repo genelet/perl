@@ -38,6 +38,8 @@ __PACKAGE__->setup_accessors(
   provider_name => 'provider',
   callback_name => 'callback',
   login_name    => 'login',
+  loginas_name  => 'loginas',
+
   logout_name   => 'logout',
   default_actions => {"GET"=>"topics", "GET_item"=>"edit", "PUT"=>"update", "POST"=>"insert", "DELETE"=>"delete"}
 );

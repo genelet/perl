@@ -147,7 +147,8 @@ sub handler {
 
   $self->warn("{Controller}[Filter]{start}1");
   my $filter = $name->new(gate=>$gate, map {($_, $self->{uc $_})} 
-	qw(document_root server_url project uploaddir pubrole script custom 
+	qw(document_root server_url project uploaddir pubrole script custom
+	loginas_name
 	secret template errors dbis db ua logger r default_actions blks storage));
   return $self->send_status_page(404) unless $filter;
   $self->warn("{Controller}[Filter]{end}1");
@@ -417,6 +418,7 @@ sub handler {
   }
  
   my $other = $form->other();
+  my $other = $form->other();
 
   $self->warn("{Controller}[SendBlocks]{start}1");
   $error = $filter->send_blocks($lists, $other);
@@ -426,6 +428,15 @@ sub handler {
     $error = undef;
   }
   $self->warn("{Controller}[SendBlocks]{end}1");
+
+  if (($action eq $self->{LOGINAS_NAME}) and $other->{$self->{LOGINAS_NAME}}) {
+    $self->warn("{Controller}[Loginas]{start}1");
+	$error = $self->login_as($other->{$self->{LOGINAS_NAME}});
+    $self->warn("{Controller}[Loginas]{error}$error");
+    return $self->error_page($filter, $ARGS, $error) if $error;
+    $self->warn("{Controller}[Loginas]{end}1");
+    return $self->send_status_page(303);
+  } 
 
   STARTVIEW:
 
@@ -645,6 +656,22 @@ sub _json_error {
   }
 
   return $output;
+}
+
+sub login_as {
+  my $self = shift;
+  my $as = shift;
+
+  my $ticket = $self->{DBIS}->{$as->{Role}}->{$as->{Provider}};
+  my $err = $ticket->authenticate_as($as->{Login});
+  return $err if $err;
+  my $fields = $ticket->get_fields($as->{Extra});
+  my $signed = $ticket->signature($fields);
+  $self->set_cookie($ticket->{SURFACE}."_", $signed);
+  $self->set_cookie($ticket->{SURFACE}, $signed, $ticket->{MAX_AGE}) if $ticket->{MAX_AGE};
+  $self->{R}->{headers_out}->{"Location"} = $as->{Uri};
+
+  return;
 }
 
 1;

@@ -114,8 +114,8 @@ sub init {
       $roles->{$role}->{lc $_} = $item->{$_} if $item->{$_};
     }
     my %pars;
-    for (qw(Coding Secret Surface Length Duration Userlist Grouplist
-Logout Domain Path Max_age)) {
+    for (qw(Coding Secret Surface Id_name Is_admin Type_id Length Duration 
+Userlist Grouplist Logout Domain Path Max_age)) {
       $pars{lc $_} = $item->{$_} if $item->{$_};
     }
     $pars{role_value} = $role;

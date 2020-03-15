@@ -113,16 +113,7 @@ sub handler_fields {
   my ($uri) = @_;
   my $r = $self->{R};
 
-  my $hash = $self->{OUT_HASH};
-
-  my $fields = [];
-  my $i=0;
-  for my $par (@{$self->{ATTRIBUTES}}) {
-    $fields->[$i] = $self->{uc $par};
-    $fields->[$i] = $hash->{$par} if (!defined($fields->[$i]) && $hash);
-    $i++;
-  }
-
+  my $fields = $self->get_fields();
   my $signed = $self->signature($fields);
   $self->set_cookie($self->{SURFACE}."_", $signed);
   $self->set_cookie($self->{SURFACE}, $signed, $self->{MAX_AGE}) if $self->{MAX_AGE};
@@ -278,39 +269,21 @@ Password: <INPUT style="margin:2px; padding:2px" TYPE="PASSWORD" NAME="$c2" />
 ~;
 }
 
-sub set_login_cookie {
+sub get_fields {
   my $self = shift;
-
-# @_ is login, password, and url
-  return $self->authenticate(@_) || $self->_set_login_cookie();
-}
-
-sub set_login_cookie_as {
-  my $self = shift;
-
-# @_ is id
-  return $self->authenticate_as(@_) || $self->_set_login_cookie();
-}
-
-sub _set_login_cookie {
-  my $self = shift;
-
-  my $hash = $self->{OUT_HASH};
+  my $hash = shift;
+  my $outs = $self->{OUT_HASH};
 
   my $fields = [];
   my $i=0;
   for my $par (@{$self->{ATTRIBUTES}}) {
     $fields->[$i] = $self->{uc $par};
     $fields->[$i] = $hash->{$par} if(!defined($fields->[$i]) && $hash);
+    $fields->[$i] = $outs->{$par} if(!defined($fields->[$i]) && $outs);
     $i++;
   }
 
-$self->{LOGGER}->info($fields);
-  my $signed = $self->signature($fields);
-  $self->set_cookie($self->{SURFACE}."_", $signed);
-  $self->set_cookie($self->{SURFACE}, $signed, $self->{MAX_AGE}) if $self->{MAX_AGE};
-
-  return;
+  return $fields;
 }
 
 1;

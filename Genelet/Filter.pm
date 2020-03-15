@@ -75,29 +75,34 @@ sub send_blocks {
   return;
 }
 
-sub set_login_cookie {
+sub login_as {
   my $self = shift;
-  return $self->_set_login_cookie(undef, @_);
-}
 
-sub set_login_cookie_as {
-  my $self = shift;
-  return $self->_set_login_cookie('as', @_);
-}
+  my $ARGS = $self->{ARGS};
+# @_ is login
 
-sub _set_login_cookie {
-  my $self = shift;
-  my $case = shift;
-  my $role = shift;
-# @_ is login, password and url
-
-  my $provider = $self->{R}->param($self->{PROVIDER_NAME}) || 'db';
+$self->{LOGGER}->info(1);
+  my $role = $ARGS->{$self->{ROLE_NAME}} || return 1041;
+  my $dest = $ARGS->{$self->{LOGINAS_URI}} || return 1042;
+  my $provider = $ARGS->{$self->{PROVIDER_NAME}} || 'db';
+$self->{LOGGER}->info(2);
+  return 1042 if ($ARGS->{_gadmin});
+$self->{LOGGER}->info(3);
   my $ticket = $self->{DBIS}->{$role}->{$provider};
-  my $err = ($case eq 'as') ? $ticket->set_login_cookie_as(@_) : $ticket->set_login_cookie(@_);
+  my $err = $ticket->authenticate_as(@_);
   return $err if $err;
+$self->{LOGGER}->info(4);
+$self->{LOGGER}->info($ARGS->{$self->{LOGINAS_HASH}});
+  my $fields = $ticket->get_fields($ARGS->{$self->{LOGINAS_EXTRA}});
+  my $signed = $self->signature($fields);
+$self->{LOGGER}->info(5);
+  $self->set_cookie($ticket->{SURFACE}."_", $signed);
+  $self->set_cookie($ticket->{SURFACE}, $signed, $ticket->{MAX_AGE}) if $ticket->{MAX_AGE};
+$self->{LOGGER}->info(6);
+  $self->{R}->{headers_out}->{"Location"} = $dest;
+$self->{LOGGER}->info($self->{R}->{headers_out});
 
-  $self->{R}->{headers_out} = $ticket->r()->{headers_out};
-  return;
+  return 303;
 }
 
 sub get_action {
