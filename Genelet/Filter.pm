@@ -127,9 +127,11 @@ sub validate {
 sub preset {
   my $self = shift;
   my $ARGS = $self->{ARGS};
-  my $action = $ARGS->{_gaction};
+  return if ($self->{PUBROLE} eq $ARGS->{_gwho});
 
+  my $action = $ARGS->{_gaction};
   my $actionHash = $self->{ACTIONS}->{$action};
+
   if ( ($actionHash->{options} && grep($_ eq 'csrf', @{$actionHash->{options}})) or
        (grep($_ eq $ENV{REQUEST_METHOD}, qw(PUT POST DELETE)) && grep($_ eq $action, qw(insert update delete insupd)))
   ) {
