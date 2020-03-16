@@ -39,6 +39,7 @@ __PACKAGE__->setup_accessors(
   callback_name => 'callback',
   login_name    => 'login',
   loginas_name  => 'loginas',
+  csrf_name     => 'csrf',
 
   logout_name   => 'logout',
   default_actions => {"GET"=>"topics", "GET_item"=>"edit", "PUT"=>"update", "POST"=>"insert", "DELETE"=>"delete"}
@@ -132,14 +133,6 @@ sub digest {
   return $str;
 }
  
-sub digest0 {
-  my $self = shift;
-
-  my $str = $self->digest64(@_); 
-  $str =~ tr|+/=||d;
-  return $str;
-}
- 
 sub error_str {
   my $self = shift;
   my $code = shift;
@@ -172,7 +165,7 @@ sub error_str {
     1034 => "Login failed. Please try again.",
     1035 => "This input field is missing: ",
     1036 => "Please make sure your browser supports cookie.",
-    1037 => "Missing input.",
+    1037 => "Missing Login or Password.",
 
     1040 => "Empty field.",
     1041 => "Foreign key forced but its value not provided.",
@@ -180,6 +173,8 @@ sub error_str {
     1043 => "Variable undefined in your customzied method.",
     1044 => "Variable undefined in your procedure method.",
     1045 => "Upload field not found.",
+    1046 => "CSRF token not found.",
+    1047 => "CSRF token not match.",
 
     1051 => "Object method does not exist.",
     1052 => "Foreign key is broken.",
@@ -193,6 +188,7 @@ sub error_str {
     1062 => "Sending mail failed.",
     1063 => "Mail server not reachable.",
     1064 => "No message nor template.",
+    1065 => "Missing mail template.",
 
     1070 => "Repeated pars in insupd",
     1071 => "Select Syntax error.",

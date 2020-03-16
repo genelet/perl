@@ -6,6 +6,7 @@ package Genelet::Filter;
 
 use strict;
 use Genelet::Base;
+use Genelet::Utils;
 
 use vars qw(@ISA);
 @ISA = ('Genelet::Base');
@@ -20,23 +21,39 @@ __PACKAGE__->setup_accessors(
 	oncepages => undef,
 	escs => undef,
 );
+  
+sub sign {
+  my $self = shift;
+  my $ARGS = $self->{ARGS};
+  my $stamp = $ARGS->{_gwhen};  #  switch to "shift"?
+
+  my ($roleid, $value) = @_;
+
+  return Genelet::Utils::token($stamp, $self->{SECRET}, $ARGS->{_gwho}.$roleid.$value);
+}
 
 sub sign_open {
   my $self = shift;
-  my $ARGS   = $self->{ARGS};
-  my ($str) = @_;
+  my ($stamp, $str) = @_;
 
-  return $self->digest($self->{SECRET}, $str, $self->{SECRET});
+  return $self->token($stamp, $self->{SECRET}, $str);
 }
-
-sub sign {
+  
+sub check_sign {
   my $self = shift;
-  my $ARGS   = $self->{ARGS};
-  my ($roleid, $value) = @_;
+  my ($tk, $roleid, $value) = @_;
 
-  return $self->digest($self->{SECRET}, $ARGS->{_gwhen}.$ARGS->{g_role}.$roleid.$value);
+  my $ARGS = $self->{ARGS};
+  return Genelet::Utils::check_token($tk, $self->{SECRET}, $ARGS->{_gwho}.$roleid.$value);
 }
- 
+
+sub check_sign_open {
+  my $self = shift;
+  my ($tk, $str) = @_;
+
+  return Genelet::Utils::check_token($tk, $self->{SECRET}, $str);
+}
+  
 sub send_blocks {
   my $self = shift;
   my ($lists, $other) = @_;
@@ -53,7 +70,7 @@ sub send_blocks {
       if ($outmail) {
         $self->info("$gmail has content");
       } else {
-        return 1062 unless $envelope->{File};
+        return 1065 unless $envelope->{File};
         $self->info("$gmail Template: ".$envelope->{File});
         $outmail = '';
         $err = $self->get_template(\$outmail, $lists, $other, $envelope->{File}, $envelope->{Extra});
@@ -73,36 +90,6 @@ sub send_blocks {
   }
 
   return;
-}
-
-sub login_as {
-  my $self = shift;
-
-  my $ARGS = $self->{ARGS};
-# @_ is login
-
-$self->{LOGGER}->info(1);
-  my $role = $ARGS->{$self->{ROLE_NAME}} || return 1041;
-  my $dest = $ARGS->{$self->{LOGINAS_URI}} || return 1042;
-  my $provider = $ARGS->{$self->{PROVIDER_NAME}} || 'db';
-$self->{LOGGER}->info(2);
-  return 1042 if ($ARGS->{_gadmin});
-$self->{LOGGER}->info(3);
-  my $ticket = $self->{DBIS}->{$role}->{$provider};
-  my $err = $ticket->authenticate_as(@_);
-  return $err if $err;
-$self->{LOGGER}->info(4);
-$self->{LOGGER}->info($ARGS->{$self->{LOGINAS_HASH}});
-  my $fields = $ticket->get_fields($ARGS->{$self->{LOGINAS_EXTRA}});
-  my $signed = $self->signature($fields);
-$self->{LOGGER}->info(5);
-  $self->set_cookie($ticket->{SURFACE}."_", $signed);
-  $self->set_cookie($ticket->{SURFACE}, $signed, $ticket->{MAX_AGE}) if $ticket->{MAX_AGE};
-$self->{LOGGER}->info(6);
-  $self->{R}->{headers_out}->{"Location"} = $dest;
-$self->{LOGGER}->info($self->{R}->{headers_out});
-
-  return 303;
 }
 
 sub get_action {
@@ -139,6 +126,18 @@ sub validate {
 
 sub preset {
   my $self = shift;
+  my $ARGS = $self->{ARGS};
+  my $action = $ARGS->{_gaction};
+
+  my $actionHash = $self->{ACTIONS}->{$action};
+  if ( ($actionHash->{options} && grep($_ eq 'csrf', @{$actionHash->{options}})) or
+       (grep($_ eq $ENV{REQUEST_METHOD}, qw(PUT POST DELETE)) && grep($_ eq $action, qw(insert update delete insupd)))
+  ) {
+    my $idname = $ARGS->{_gidname};
+    my $tk = $ARGS->{$self->{CSRF_NAME}};
+    return 1046 unless $tk;
+    return 1047 unless $self->check_sign($tk, $idname, $ARGS->{$idname});
+  }
 
   return;
 }
@@ -154,6 +153,8 @@ sub after {
   my $self = shift;
   my $form = shift;
 
+  my $ARGS = $self->{ARGS};
+
   return unless $self->{ONCEPAGES};
   my $nextpages = $self->{ONCEPAGES}->{$self->{ARGS}->{g_action}} or return;
 
@@ -162,6 +163,11 @@ sub after {
     my $err = $form->call_once($page, $_[$i]);
     return $err if $err;
     $i++;
+  }
+
+  unless ($self->{PUBROLE} eq $ARGS->{_gwho}) {
+    my $idname = $ARGS->{_gidname};
+    $form->{OTHER}->{$self->{CSRF_NAME}} = $self->sign($idname, $ARGS->{$idname});
   }
 
   return;

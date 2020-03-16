@@ -2,7 +2,7 @@
 
 use strict;
 use Data::Dumper;
-use Test::More tests => 12;
+use Test::More tests => 14;
 use lib '.';
 use lib '../..';
 use Genelet::Utils;
@@ -32,4 +32,14 @@ for my $key (@{$demography->[1]}) {
   $i++;
 }
 
+my $stamp = time();
+sleep(1);
+my $secret = "aaaaaaaa";
+my @all = ("bbbbbbbb","cccccccc","dddddddd");
+
+my $tk = token($stamp, @all);
+my $bool = check_token($tk, @all);
+
+is($stamp, get_tokentime($tk), "$stamp is ".get_tokentime($tk));
+is($bool, 1, "$tk is $bool");
 exit;

@@ -1,14 +1,40 @@
 package Genelet::Utils;
 
 use strict;
+      use Data::Dumper;
 use File::Basename;
 use Time::Local;
 use vars qw(@ISA @EXPORT);
 
+use Digest::SHA qw(sha256);
+use MIME::Base64 qw(encode_base64url decode_base64url);
+
 use Exporter;
 @ISA = qw(Exporter);
 
-@EXPORT = qw(ipint ipstr randompw randomhex unix_from_now now_from_unix day_from_unix usday_from_unix day_for_tomorrow rfc822_time upload_field dimensions bits2total total2bits bits2filters);
+@EXPORT = qw(token get_tokentime check_token ipint ipstr randompw randomhex unix_from_now now_from_unix day_from_unix usday_from_unix day_for_tomorrow rfc822_time upload_field bits2total total2bits bits2filters);
+
+sub token {
+  # stamp, secret, rest...
+  my @all = @_;
+  my $data = join('', @all);
+
+  return MIME::Base64::encode_base64url(pack("La*", $all[0], sha256($data)));
+}
+
+sub get_tokentime {
+  my $str = shift;
+
+  my @all = unpack("La*", MIME::Base64::decode_base64url($str));
+  return $all[0];
+}
+
+sub check_token {
+  my $tk = shift;
+  # secret, rest...
+  my $stamp = get_tokentime($tk);
+  return ($tk eq token($stamp, @_)) ? 1 : 0;
+}
 
 my $quick2 = sub { # 2^n - 1
   my $bit = shift or return 0;
@@ -180,67 +206,6 @@ sub upload_field {
   close(FH);
 
   return $name;
-}
-
-sub dimensions {
-  my $buf;
-  my $height;
-  my $width;
-  local *IMAGE;
-
-  open(IMAGE, "<".shift()) || return;
-  return if (read(IMAGE, $buf, 2) < 2);
-  if ($buf eq "GI") {
-    return if (read(IMAGE, $buf, 8) < 8);
-    if (substr($buf, 0, 1) eq "F") {
-      ($width, $height) = unpack("vv", substr($buf, 4, 4));
-      return {width=>$width, height=>$height, type=>'gif'};
-    }
-  } elsif ($buf eq "\377\330") {
-    my $mk;
-    my $len;
-
-    for (;;) {
-      do {
-        return if (read(IMAGE, $buf, 1) < 1);
-      } while ($buf ne "\377");
-      while ($buf eq "\377") {
-        return if (read(IMAGE, $buf, 1) < 1);
-      }
-      $mk = unpack("C", $buf);
-      return if (read(IMAGE, $buf, 2) < 2);
-      $len = unpack("n", $buf);
-      if (($mk >= 0xC0 && $mk <= 0xC3) || ($mk >= 0xC5 && $mk <= 0xC7) || ($mk >= 0xC9 && $mk <= 0xCB) || ($mk >= 0xCD && $mk <= 0xCF)) {
-        return if ($len < 7);
-        return if (read(IMAGE, $buf, $len - 2) < $len - 2);
-        ($height, $width) = unpack("nn", substr($buf, 1, 4));
-        return {width=>$width, height=>$height, type=>'jpg'};
-      } else {
-        seek(IMAGE, $len - 2, 1) || return;
-      }
-    }
-  } elsif ($buf eq "\211P") {
-    return if (read(IMAGE, $buf, 22) < 22);
-    if (substr($buf, 0, 6) eq "NG\015\012\032\012") {
-      ($width, $height) = unpack("NN", substr($buf, 14, 8));
-      return {width=>$width, height=>$height, type=>'png'};
-    }
-  } elsif ($buf eq "BM") {
-    my $mk;
-    return if (read(IMAGE, $buf, 14) < 14);
-    $mk = unpack("v", substr($buf, 12, 2));
-    if ($mk == 12) {
-      return if (read(IMAGE, $buf, 6) < 6);
-      ($width, $height) = unpack("vv", substr($buf, 2, 4));
-    } elsif ($mk == 40 || $mk == 64) {
-      return if (read(IMAGE, $buf, 10) < 10);
-      ($width, $height) = unpack("VV", substr($buf, 2, 8));
-    } else {
-      return;
-    }
-    return {width=>$width, height=>$height, type=>'bmp'};
-  }
-  return;
 }
 
 1;

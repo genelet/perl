@@ -148,7 +148,7 @@ sub handler {
   $self->warn("{Controller}[Filter]{start}1");
   my $filter = $name->new(gate=>$gate, map {($_, $self->{uc $_})} 
 	qw(document_root server_url project uploaddir pubrole script custom
-	loginas_name
+	loginas_name csrf_name
 	secret template errors dbis db ua logger r default_actions blks storage));
   return $self->send_status_page(404) unless $filter;
   $self->warn("{Controller}[Filter]{end}1");
