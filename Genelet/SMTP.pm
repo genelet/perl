@@ -8,7 +8,7 @@ sub send_mail {
   my $self = shift;
   my ($pars, $output, $smtp) = @_;
 
-  return 1060 unless ($pars->{Server} && $pars->{From} && $pars->{To} && $pars->{Subject});
+  return [1060, $pars] unless ($pars->{Server} && $pars->{From} && $pars->{To} && $pars->{Subject});
 
   my ($server, $port) = split /:/, $pars->{Server};
   $smtp ||= Net::SMTP->new($server, Port=>($port||25), Hello=>$pars->{Hello}, SSL=>$pars->{SSL}, Debug=>$pars->{Debug}) or return [1063, $!];

@@ -36,7 +36,7 @@ sub sign_open {
   my $self = shift;
   my ($stamp, $str) = @_;
 
-  return $self->token($stamp, $self->{SECRET}, $str);
+  return Genelet::Utils::token($stamp, $self->{SECRET}, $str);
 }
   
 sub check_sign {
@@ -64,7 +64,7 @@ sub send_blocks {
     my $hash = $self->{BLKS}->{$gmail};
     my $obj  = $other->{$gmail};
     next unless ($hash && $obj);
-    foreach my $envelope ((ref($obj) eq 'ARRAY') ? @{$obj} : $obj) {
+    foreach my $envelope ((ref($obj) eq 'ARRAY') ? @{$obj} : ($obj)) {
       $self->warn("{Filter}[$gmail]{start}1");
       my $outmail = $envelope->{Content};
       if ($outmail) {
