@@ -195,12 +195,13 @@ sub error_str {
     1072 => "Failed to connect to the database.",
     1073 => "SQL failed, check your SQL statement; or duplicate entry.",
     1074 => "Die from db.",
-    1075 => "Records exist in other tables",
+    1075 => "The record already exists",
     1076 => "Could not get a random ID.",
     1077 => "Condition not found in update.",
     1078 => "Hash not found in insert.",
     1079 => "Missing lists.",
 
+    1170 => "Missing ID.",
     1171 => "Failed insert, maybe existing",
     1172 => "Failed delete, check if FK exists",
     1173 => "Failed update",
@@ -237,6 +238,7 @@ sub error_str {
   return $str || $errors{$code} || $code;
 }
 
+=pod
 sub ua_get {
   my $self = shift;
 
@@ -272,5 +274,6 @@ sub ua_delete {
   return unless $response->is_success();
   return $response->content();
 }
+=cut
 
 1;

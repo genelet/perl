@@ -137,8 +137,8 @@ sub preset {
   ) {
     my $idname = $ARGS->{_gidname};
     my $tk = $ARGS->{$self->{CSRF_NAME}};
-    return 1046 unless $tk;
-    return 1047 unless $self->check_sign($tk, $idname, $ARGS->{$idname});
+    #return 1046 unless $tk;
+    #return 1047 unless $self->check_sign($tk, $idname, $ARGS->{$idname});
   }
 
   return;

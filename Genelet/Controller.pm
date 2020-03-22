@@ -418,7 +418,6 @@ sub handler {
   }
  
   my $other = $form->other();
-  my $other = $form->other();
 
   $self->warn("{Controller}[SendBlocks]{start}1");
   $error = $filter->send_blocks($lists, $other);
