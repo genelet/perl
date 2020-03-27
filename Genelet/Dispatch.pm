@@ -125,7 +125,7 @@ Userlist Grouplist Logout Domain Path Max_age)) {
       my %last;
       $last{attributes} = $item->{Attributes};
       $last{provider} = $provider;
-      for (qw(Default Screen Sql Sql_as Credential In_pars Out_pars)) {
+      for (qw(Default Screen Sql Sql_as Credential Condition_uri In_pars Out_pars)) {
         $last{lc $_} = $issuer->{$_} if $issuer->{$_}; 
       }
       push @$remotes, $provider if ($provider ne 'db' and $provider ne "plain");

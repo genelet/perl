@@ -15,6 +15,7 @@ $VERSION = 1.01;
 __PACKAGE__->setup_accessors(
   cookietype => 'cookie',
   credential => [],
+  condition_uri => undef,
 
   found      => undef,
 
@@ -114,6 +115,54 @@ sub handler_fields {
   my $r = $self->{R};
 
   my $fields = $self->get_fields();
+
+  # ["tA10","o_found","A","/v1/public/e/apply?action=startlin&status=New","registerID","m_email","m_firstname","m_lastname"],
+  # ["uC01","/v1/school/e/","_md5","/v1/school/e/school?action=topics"]
+  # how, variable name, value, base uri, others wholse values in redirect
+  # how: (t, u, p)+(A, B, C)+(0,1)+(0,1), t:out_hash, u:go_uri, p:provider
+  # for u and p, go_uri has to match values[1]
+  # A:equal, B:not equal, C:match,
+  # 0: no stamp nor md5, 1: stamp and md5; 0:no coookie, 1:cookie
+
+  if ($self->{CONDITION_URI}) {
+    my $outs = $self->{OUT_HASH};
+    foreach my $values (@{$self->{CONDITION_URI}}) {
+      my @how = split '', $values->[0], -1;
+      my $obs = "";
+      if ($how[0] eq "t") {
+        $obs = $outs->{$values->[1]};
+      } else {
+        if ($how[0] eq "p") {
+          $obs = $self->{PROVIDER};
+        } else {
+          $obs = $uri;
+        }
+        my $newuri = URI->new($uri);
+        next unless (substr($newuri->path(), 0, length($values->[1])) eq $values->[1]);
+      }
+      if (($how[1] eq "A" && $obs eq $values->[2]) or
+          ($how[1] eq "B" && $obs ne $values->[2]) or
+          ($how[1] eq "C" && $obs =~ /$values->[2]/)) {
+        my $target = URI->new($values->[3]);
+        my $q = $target->query();
+        for (my $i=4; $i<length(@$values); $i++) {
+          my $par = $values->[$i];
+          $q->{$par} = $outs->{$par} if defined($outs->{$par});
+        }
+        #if ($how[2] eq "1") {
+        #  $q->{c.Go_stamp_name,fmt.Sprintf("%d", Unix_timestamp()))
+        #  $q->{c.Go_md5_name, SortMapMd5(c.Secret, self.C.Go_md5_name, q))
+        #}
+        $target->query($q);
+        $uri = $target->as_string();
+        if ($how[3] eq "0") {
+          $r->{headers_out}->{"Location"} = $uri;
+          return $self->send_status_page(303);
+        }
+      }
+    }
+  }
+
   my $signed = $self->signature($fields);
   $self->set_cookie($self->{SURFACE}."_", $signed);
   $self->set_cookie($self->{SURFACE}, $signed, $self->{MAX_AGE}) if $self->{MAX_AGE};
@@ -132,14 +181,14 @@ sub handler_fields {
     }
   }
 
-  if (($self->{COOKIETYPE} eq 'cookie') || $self->{FOUND} || $r->param($self->{CREDENTIAL}->[2])) { #browser ok cookie or force cookie
-    $self->warn("{Loginout}[Signature]{cookie}1");
-  } else {
-    $self->warn("{Loginout}[Signature]{url}1");
-    my $newuri = URI->new($uri);
-    $newuri->path("/".$self->{SURFACE}."/".$signed . $newuri->path);
-    $uri = $newuri->as_string();
-  }
+  #if (($self->{COOKIETYPE} eq 'cookie') || $self->{FOUND} || $r->param($self->{CREDENTIAL}->[2])) { #browser ok cookie or force cookie
+  #  $self->warn("{Loginout}[Signature]{cookie}1");
+  #} else {
+  #  $self->warn("{Loginout}[Signature]{url}1");
+  #  my $newuri = URI->new($uri);
+  #  $newuri->path("/".$self->{SURFACE}."/".$signed . $newuri->path);
+  #  $uri = $newuri->as_string();
+  #}
 
   $self->warn("{Loginout}[Signature]{redirect}".$uri);
   $r->{headers_out}->{"Location"} = $uri;

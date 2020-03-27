@@ -111,7 +111,7 @@ sub talk {
 		return;
     }
 
-	return $res->status_line;
+	return ($res->decoded_content) ? decode_json($res->decoded_content) : $res->status_line;
 }
 
 # pass id in query, and add extra $name optionally
