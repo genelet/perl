@@ -170,6 +170,7 @@ sub run {
   (undef, my @path_info) = split /\//, $ENV{PATH_INFO}, -1;
   if (@path_info==4 and $ENV{REQUEST_METHOD} eq "GET") {
     $r->param(-name=>"_gid_url", -value=>$path_info[3]);
+    $ENV{REQUEST_METHOD} = 'GET_item';
   } elsif (@path_info!=3) {
     $self->send_status_page(404, "Wrong URL");
   }
@@ -190,6 +191,11 @@ sub run {
     $self->warn("{CGIController}[Name]{role}".$role);
     return $gate->handler_logout($role, $tag);
     $self->warn("{CGIController}[Out]{end}1");
+  }
+
+  unless (grep {ucfirst($obj) eq $_} @{$self->{COMPS}}) {
+    $self->send_status_page(404, "Wrong URL");
+    return;
   }
 
   if ($gate || ($self->{SHADOWS} && $self->{SHADOWS}->{$role})) {

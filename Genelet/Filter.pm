@@ -116,10 +116,18 @@ sub validate {
   my $self = shift;
   my $action = shift || $self->{ARGS}->{_gaction};
 
-  my $validate = $self->{ACTIONS}->{$action}->{'validate'} or return;
+  my $actionHash = $self->{ACTIONS}->{$action};
+  my $validate = $actionHash->{'validate'} or return;
   for my $field (@$validate) {
-    return $field unless defined($self->{ARGS}->{$field});
+    return [1035, $field] unless defined($self->{ARGS}->{$field});
   }
+
+  my $method = $ENV{REQUEST_METHOD};
+  return 1038 unless ($method eq 'POST'
+	|| ($action eq 'edit' && ($method eq 'GET' || $method eq 'GET_item'))
+	|| ($action eq 'delete' && $method eq 'GET')
+	|| ($action eq $self->{DEFAULT_ACTIONS}->{$method})
+	|| grep {$method eq $_} @{$actionHash->{'method'}});
 
   return;
 }

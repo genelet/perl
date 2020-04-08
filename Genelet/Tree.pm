@@ -116,6 +116,9 @@ sub tree_find_parents {
     next unless $item->{$field_parent};
     return if $item->{_found};
 	if ($target eq $item->{$field_parent}) { # found ! return now
+		if ($level==1) {
+			return {%$item, "_level", $level, "_found", 1};
+		}
 		push @all, {%$item, "_level", $level, "_found", 1};
 		return @all;
 	}

@@ -12,7 +12,8 @@ sub oauth2_request {
   my $uri = shift;
   my $current = shift;
 
-# my $ua = LWP::UserAgent->new();
+  $self->{UA} ||= LWP::UserAgent->new();
+  $self->{UA}->default_header('Accept' => "application/json");
   my $response;
   if ($method eq 'GET') {
     $uri .= '?';

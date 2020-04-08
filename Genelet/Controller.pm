@@ -307,7 +307,7 @@ sub handler {
     }
   }
   $self->warn("{Controller}[Validate]{start}1");
-  $error = $filter->validate($action) and return $self->error_page($filter, $ARGS, [1035, $error]);
+  $error = $filter->validate($action) and return $self->error_page($filter, $ARGS, $error);
   $self->warn("{Controller}[Validate]{end}1");
 
   my ($dbh, $form);

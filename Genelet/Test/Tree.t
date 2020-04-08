@@ -92,15 +92,20 @@ is($children[8]->[1], 3, "level matches");
 # Genelet::Tree::tree_all_children($ref, "children", 0);
 
 $ref = get_fks_ref();
-@parents = Genelet::Tree::tree_hash_parents($ref, 'pk', 'history__historyid');
-warn Dumper \@parents;
+#@parents = Genelet::Tree::tree_hash_parents($ref, 'pk', 'history__historyid');
+#warn 11111111111111;
+#warn Dumper \@parents;
 
 $ref = get_fks_ref();
+warn 11111111111111;
+warn Dumper $ref;
 @parents = Genelet::Tree::tree_find_parents("member__memberid", $ref, 'pk', 'history__historyid');
+warn 22222222222;
 warn Dumper \@parents;
 
 $ref = get_fks_ref();
 @parents = Genelet::Tree::tree_find_parents("company__companyid", $ref, 'pk', 'history__historyid');
+warn 333333333333;
 warn Dumper \@parents;
 
 exit;

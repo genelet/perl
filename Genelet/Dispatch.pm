@@ -98,7 +98,7 @@ sub init {
   my $logger = Genelet::Logger->new(%{$config->{Log}}) if $config->{Log};
   $logger->emergency($error) if ($logger && $error);
 
-  my %base = (env=>\%ENV, storage=>$Storage);
+  my %base = (env=>\%ENV, storage=>$Storage, comps=>$Components);
   for my $key (keys %$config) {
     next if ($key eq "Roles");
     $base{lc $key} = $config->{$key}

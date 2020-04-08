@@ -28,6 +28,7 @@ __PACKAGE__->setup_accessors(
   blks          => [],
   script        => '',
   pubrole       => '',
+  comps         => [],
 
   secret        => '',
   action_name   => 'action',
@@ -42,7 +43,7 @@ __PACKAGE__->setup_accessors(
   csrf_name     => 'csrf',
 
   logout_name   => 'logout',
-  default_actions => {"GET"=>"topics", "GET_item"=>"edit", "PUT"=>"update", "POST"=>"insert", "DELETE"=>"delete"}
+  default_actions => {"GET"=>"topics", "GET_item"=>"edit", "PUT"=>"update", "POST"=>"insert", "DELETE"=>"delete", "PATCH"=>"insupd"}
 );
 
 sub dbh_trace {
@@ -166,6 +167,7 @@ sub error_str {
     1035 => "This input field is missing: ",
     1036 => "Please make sure your browser supports cookie.",
     1037 => "Missing Login or Password.",
+	1038 => "HTTP Request Method for this action is not allowed.",
 
     1040 => "Empty field.",
     1041 => "Foreign key forced but its value not provided.",
@@ -238,7 +240,6 @@ sub error_str {
   return $str || $errors{$code} || $code;
 }
 
-=pod
 sub ua_get {
   my $self = shift;
 
@@ -274,6 +275,5 @@ sub ua_delete {
   return unless $response->is_success();
   return $response->content();
 }
-=cut
 
 1;
