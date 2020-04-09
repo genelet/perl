@@ -75,7 +75,7 @@ sub authenticate {
   }
  
   my $state = $self->{R}->param("state");
-  my $next_url = $self->get_cookie($self->{PROVIDER_NAME}."_1") || $self->get_callback($uri);
+  my $next_url = $self->get_cookie($self->{PROVIDER_NAME}."_1") || $self->{CALLBACK_URL} || $self->get_callback($uri);
 
   $self->warn("{Oauth2}[AccessToken]{start}1");
   my $form = {

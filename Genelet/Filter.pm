@@ -125,6 +125,8 @@ sub validate {
   my $method = $ENV{REQUEST_METHOD};
   return 1038 unless ($method eq 'POST'
 	|| ($action eq 'edit' && ($method eq 'GET' || $method eq 'GET_item'))
+	|| ($action eq 'startnew' && $method eq 'GET')
+	|| ($action eq 'loginas' && $method eq 'GET')
 	|| ($action eq 'delete' && $method eq 'GET')
 	|| ($action eq $self->{DEFAULT_ACTIONS}->{$method})
 	|| grep {$method eq $_} @{$actionHash->{'method'}});
