@@ -375,7 +375,7 @@ sub insupd {
   my $extra = shift;
 
   my $uniques = $self->{INSUPD_PARS};
-  return 1078 unless $uniques;
+  return 1080 unless $uniques;
 
   my $field_values = $get_fv->($self->{ARGS}, $self->{INSERT_PARS});
   if ($extra) { # to force some field_values
@@ -389,14 +389,14 @@ sub insupd {
       }
     }
   }
-  return 1078 unless $field_values;
+  return 1081 unless $field_values;
 
   if (ref($uniques) eq 'ARRAY') {
     for (@$uniques) {
-      return 1078 unless defined($field_values->{$_});
+      return 1082 unless defined($field_values->{$_});
     }
   } else {
-    return 1078 unless defined($field_values->{$uniques});
+    return 1083 unless defined($field_values->{$uniques});
   }
 
   my $upd_field_values = $get_fv->($self->{ARGS}, $self->{UPDATE_PARS});

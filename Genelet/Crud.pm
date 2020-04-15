@@ -233,6 +233,7 @@ sub update_hash {
   } else {
     delete $field_values->{$keyname} if defined($field_values->{$keyname});
   }
+  return unless (keys %$field_values);
   
   my @fields;
   my @values;

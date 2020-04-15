@@ -202,12 +202,16 @@ sub error_str {
     1077 => "Condition not found in update.",
     1078 => "Hash not found in insert.",
     1079 => "Missing lists.",
+	1080 => "Missing insupd pars.",
+	1081 => "Hash not found in insupd.",
+	1082 => "Not in multiple uniques.",
+	1081 => "Not in unique.",
 
     1170 => "Missing ID.",
     1171 => "Failed insert, maybe existing",
     1172 => "Failed delete, check if FK exists",
     1173 => "Failed update",
-    1174 => "Failed select due to wrong format",
+    1174 => "Failed select due to wrong SQL statement or format",
     1175 => "Failed PROCEDURE",
 
     1080 => "Can't write to cache.",
