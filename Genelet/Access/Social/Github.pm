@@ -22,16 +22,21 @@ __PACKAGE__->setup_accessors(
 sub get_token {
   my $self = shift;
   my $back = $self->SUPER::get_token(@_);
+  return $back;
   
+=pod
   my $saved = $self->get_cookie($self->{PROVIDER_NAME});
+  $self->set_cookie_expired($self->{PROVIDER_NAME});
   if ($saved) {
     my $hash = decode_json($saved);
     foreach my $k (keys %$hash) {
       $back->{$k} = $hash->{$k};
     }
+    $self->set_cookie_expired($self->{PROVIDER_NAME});
   }
 
   return $back;
+=cut
 }
 
 sub oauth2_api {
