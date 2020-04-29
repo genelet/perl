@@ -87,7 +87,7 @@ sub assign_fk_tobe {
   sub make_it {
     my $the_lists = shift;
     my $fk = shift;
-    my ($secret, $stamp, $who, $value_roleid, $escs) = @_;
+    my ($secret, $stamp, $who, $value_roleid) = @_;
 
     my $name = $fk->[2];
     my $is_array = (ref($name) eq 'ARRAY');
@@ -103,11 +103,6 @@ TOP: for my $item (@$the_lists) {
         $value = $item->{$name};
       }
       $item->{$fk->[3]} = $self->digest($secret, $stamp.$who.$value_roleid.$value);
-      next unless $escs;
-      for (@{$escs}) {
-        $item->{$_."_esc"} = uri_escape_utf8($item->{$_}) 
-			if defined($item->{$_});
-      }
     }
     return;
   }
@@ -152,7 +147,7 @@ sub handler {
 	secret template errors dbis db ua logger r default_actions blks storage));
   return $self->send_status_page(404) unless $filter;
   $self->warn("{Controller}[Filter]{end}1");
-  for my $att (qw(actions fks escs oncepages)) {
+  for my $att (qw(actions fks oncepages)) {
     my $ref = $self->{STORAGE}->{$save};
     $filter->$att(ref($ref->{$att}) ? dclone($ref->{$att}) : $ref->{$att}) if exists($ref->{$att});
   }
@@ -182,14 +177,6 @@ sub handler {
         $ARGS->{$par} = uri_escape_utf8($ARGS->{$par});
       } 
     }
-  }
-  my $escs = $filter->escs() if $self->{ESCAPE_ESC};
-  if ($escs) {
-    $self->warn("{Controller}[Name]{Escs}start");
-    for my $orig (@$escs) {
-      $ARGS->{$orig."_esc"} ||= uri_escape_utf8($ARGS->{$orig}) if defined($ARGS->{$orig});
-    }
-    $self->warn("{Controller}[Name]{Escs}end");
   }
   $ARGS->{_guri}   = $pathinfo;
   $ARGS->{_gwho}   = $ARGS->{g_role} = $who;
@@ -252,21 +239,18 @@ sub handler {
 
   if ($actionHash->{upload}) {
     $self->warn("{Controller}[Upload]{start}1");
-# uploads => {html_field => [args_field, upload_dir]}
+# uploads => {html_field => [args_field, upload_dir relative to doc root]}
 # in GO, html_field=args_field
     while (my ($field, $value) = each %{$actionHash->{upload}}) {
       my $field_new = shift @$value;
       my $dir = $self->{UPLOADDIR};
-      $dir = shift(@$value) if $value;
-      $ARGS->{$field_new} = ($value) ? Genelet::Utils::upload_field($r, $field, $dir, @$value) : Genelet::Utils::upload_field($r, $field, $dir);
-      #unless ($ARGS->{$field_new}) {
-      #  $self->warn("{Controller}[Upload]{end}1:$field");
-	  #  return $self->error_page($filter, $ARGS, [1045, $field]);
-      #}
+      $dir = $self->{DOCUMENT_ROOT}.shift(@$value) if ($value && @$value);
+      my $err = ($value) ? Genelet::Utils::upload_field($ARGS, $r, $field_new, $field, $dir, @$value) : Genelet::Utils::upload_field($ARGS, $r, $field_new, $field, $dir);
+      return $self->error_page($filter, $ARGS, $err) if $err;
     }
     $self->warn("{Controller}[Upload]{end}1");
   }
-
+  
   $filter->args($ARGS);
 
   my $error;
@@ -390,15 +374,9 @@ sub handler {
   # 3) if the key to be is the role id, not assign anything
   if ($fk && $self->{SECRET} && $fk->[2] && $fk->[3] && ($fk->[2] ne $ARGS->{_gidname})) {
     $self->warn("{Controller}[FKout]{start}1");
-    $self->assign_fk_tobe($lists, $fk, $ARGS->{_gwhen}, $who, $ARGS->{$ARGS->{_gidname}}, $escs);
+    $self->assign_fk_tobe($lists, $fk, $ARGS->{_gwhen}, $who, $ARGS->{$ARGS->{_gidname}});
 
     $self->warn("{Controller}[FKout]{end}1");
-  } elsif ($escs) {
-    for my $item (@$lists) {
-      for (@$escs) {
-        $item->{$_."_esc"} = uri_escape_utf8($item->{$_}) if defined($item->{$_});
-      }
-    }
   }
 
   $self->warn("{Controller}[After]{start}1");

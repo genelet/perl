@@ -177,6 +177,9 @@ sub error_str {
     1045 => "Upload field not found.",
     1046 => "CSRF token not found.",
     1047 => "CSRF token not match.",
+    1048 => "Upload field not found.",
+    1049 => "Upload filename not found.",
+    1050 => "Upload directory not found.",
 
     1051 => "Object method does not exist.",
     1052 => "Foreign key is broken.",

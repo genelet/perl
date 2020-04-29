@@ -1,7 +1,7 @@
 package Genelet::Utils;
 
 use strict;
-      use Data::Dumper;
+use Data::Dumper;
 use File::Basename;
 use Time::Local;
 use vars qw(@ISA @EXPORT);
@@ -169,15 +169,29 @@ sub rfc822_time {
   return sprintf("%s, %02d %s %04d %02d:%02d:%02d PST", $weeks[$w], $d, $months[$m], $y+1900, $hour, $min, $sec);
 }
 
-# [must] r: request object, field: file upload form field, dir: directory to store the file, 
-# [optional] name: name of the resultant file on server, ext_guess: guess extension
 sub upload_field {
+  my $ARGS = shift;
   my $r = shift;
-  my ($field, $dir, $name, $ext_guess) = @_;
+  my ($field_new, $field, $dir, $name, $ext_guess) = @_;
 
   my $upload_fh = $r->upload($field);
-  my $upload    = $r->param($field);
-  return unless ($dir && $upload && $upload_fh);
+#{'Content-Disposition' => 'form-data; name="dbfilename"; filename="Book1.csv"',
+# 'Content-Type' => 'application/vnd.ms-excel'}
+  my $info = $r->uploadInfo($upload_fh);
+  my $upload;
+  my @a = split /;\s/, $info->{'Content-Disposition'}, -1;
+  for my $item (@a) {
+    my @b = split /=/, $item;
+    if ($b[0] eq 'filename') {
+      $upload = $b[1];
+      $upload =~ s/^"//;
+      $upload =~ s/"$//;
+      last;
+    }
+  }
+  return 1048 unless $upload_fh;
+  return 1049 unless $upload;
+  return 1050 unless $dir;
 
   if (!$name or $ext_guess) {
     my ($orig, $pre, $ext);
@@ -194,18 +208,17 @@ sub upload_field {
     }
   }
 
-  my $ret = open(FH, ">$dir/$name");
-  unless ($ret) {
-    warn ">$dir/$name:" . $!;
-    return;
-  }
+  my $ret = open(FH, ">$dir/$name") or return $!
+
   my ($bytesread, $buffer);
   while ($bytesread = read($upload_fh, $buffer, 1024)) {
     print FH $buffer;
   }
   close(FH);
 
-  return $name;
+  $ARGS->{$field_new} = $name;
+  $ARGS->{"dir_" . $field_new} = $dir;
+  return;
 }
 
 1;

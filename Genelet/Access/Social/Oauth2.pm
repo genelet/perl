@@ -61,21 +61,21 @@ sub build_authorize {
 
 sub authenticate {
   my $self = shift;
-  my ($login, $password, $uri) = @_;
+  my ($login, $password, $uri, $state) = @_;
 
   $self->warn("{Oauth2}[In]{start}1");
   unless ($login) {
     $self->warn("{Oauth2}[Authorize]{error}1:".$password);
     return 400 if $password; # authorization failed
     $self->warn("{Oauth2}[Authorize]{URL}".$self->{AUTHORIZE_URL});
-	$self->{R}->{headers_out}->{"Location"} = $self->build_authorize($self->{CALLBACK_URL}||$self->get_callback($uri), $self->{R}->param("state"));
+	$self->{R}->{headers_out}->{"Location"} = $self->build_authorize($self->{CALLBACK_URL}||$self->get_callback($uri), $state || $self->{R}->param("state"));
 	$self->set_cookie($self->{GO_PROBE_NAME}, $uri);	
     $self->warn("{Oauth2}[In]{end}1");
     return 303;
   }
  
-  my $state = $self->{R}->param("state");
-  my $next_url = $self->get_cookie($self->{PROVIDER_NAME}."_1") || $self->{CALLBACK_URL} || $self->get_callback($uri);
+  $state ||= $self->{R}->param("state");
+  my $next_url = $self->{CALLBACK_URL} || $self->get_callback($uri);
 
   $self->warn("{Oauth2}[AccessToken]{start}1");
   my $form = {

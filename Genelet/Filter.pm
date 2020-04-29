@@ -19,7 +19,6 @@ __PACKAGE__->setup_accessors(
 	actions => undef,
 	fks => undef,
 	oncepages => undef,
-	escs => undef,
 );
   
 sub sign {
