@@ -539,10 +539,15 @@ sub get_order_string {
   my $ARGS = $self->{ARGS};
   my $column = $ARGS->{$self->{SORTBY}};
   unless ($column) {
-    #return "";
-    $column = (ref($self->{CURRENT_KEY}) eq 'ARRAY') ? join(',', @{$self->{CURRENT_KEY}}) : $self->{CURRENT_KEY};
+    my $t0 = $self->{CURRENT_TABLES}->[0] if $self->{CURRENT_TABLES};
+    if ($t0 && $t0->{sortby}) {
+      $column = $t0->{sortby};
+    } else {
+      my $ck = $self->{CURRENT_KEY};
+      $column = (ref($ck) eq 'ARRAY') ? join(',', @$ck) : $ck;
+      $column = ($t0->{alias} || $t0->{name}) .".". $column if ($t0 && $column !~ /\./);
+    }
   }
-  $column = ($self->{CURRENT_TABLES}->[0]->{alias} || $self->{CURRENT_TABLES}->[0]->{name}) . ".$column" if ($self->{CURRENT_TABLES} && $column !~ /\./);
   my $order = "ORDER BY $column";
   $order .= " DESC" if $ARGS->{$self->{SORTREVERSE}};
 
