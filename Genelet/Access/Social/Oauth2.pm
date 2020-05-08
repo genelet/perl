@@ -36,6 +36,26 @@ sub handler {
   return $self->handler_login();
 }
 
+sub get_me {
+  my $self = shift;
+  return ({access_token=>$self->{ACCESS_TOKEN}}, undef);
+}
+
+sub get_token_body {
+  my $self = shift;
+  my ($login, $redirect_uri, $state) = @_;
+  my $form = {
+    code         =>$login,
+    client_id    =>$self->{CLIENT_ID},
+    client_secret=>$self->{CLIENT_SECRET},
+    redirect_uri =>$redirect_uri
+  };
+  $form->{state} = $state if $state;
+  $form->{grant_type} = $self->{GRANT_TYPE} if $self->{GRANT_TYPE};
+  $self->warn("{Oauth2}[RequestToken]{start}1");
+  return $self->oauth2_request($self->{TOKEN_METHOD_GET} ? "GET" : "POST", $self->{ACCESS_TOKEN_URL}, $form);
+}
+
 sub build_authorize {
 	my $self = shift;
 	my $url = shift;
@@ -68,7 +88,7 @@ sub authenticate {
     $self->warn("{Oauth2}[Authorize]{error}1:".$password);
     return 400 if $password; # authorization failed
     $self->warn("{Oauth2}[Authorize]{URL}".$self->{AUTHORIZE_URL});
-	$self->{R}->{headers_out}->{"Location"} = $self->build_authorize($self->{CALLBACK_URL}||$self->get_callback($uri), $state || $self->{R}->param("state"));
+	$self->{R}->{headers_out}->{"Location"} = $self->build_authorize($self->{CALLBACK_URL}||$self->get_callback($uri), $state || scalar($self->{R}->param("state")));
 	$self->set_cookie($self->{GO_PROBE_NAME}, $uri);	
     $self->warn("{Oauth2}[In]{end}1");
     return 303;
@@ -78,16 +98,7 @@ sub authenticate {
   my $next_url = $self->{CALLBACK_URL} || $self->get_callback($uri);
 
   $self->warn("{Oauth2}[AccessToken]{start}1");
-  my $form = {
-    code         =>$login,
-    client_id    =>$self->{CLIENT_ID},
-    client_secret=>$self->{CLIENT_SECRET},
-    redirect_uri =>$next_url
-  };
-  $form->{state} = $state if $state;
-  $form->{grant_type} = $self->{GRANT_TYPE} if $self->{GRANT_TYPE};
-  $self->warn("{Oauth2}[RequestToken]{start}1");
-  my $body = $self->oauth2_request($self->{TOKEN_METHOD_GET} ? "GET" : "POST", $self->{ACCESS_TOKEN_URL}, $form);
+  my $body = $self->get_token_body($login, $next_url, $state);
   $self->warn("{Oauth2}[RequestToken]{end}1");
   unless ($body) {
     $self->warn("{Oauth2}[AccessToken]{end}1:401A");
@@ -103,7 +114,8 @@ sub authenticate {
   $self->{ACCESS_TOKEN} = $back->{access_token};
   if ($self->{ENDPOINT}) {
     $self->warn("{Oauth2}[EndPoint]{Url}".$self->{OAUTH_ENDPOINT});
-    my $err = $self->oauth2_api($back, "GET", $self->{ENDPOINT});
+    my @two = $self->get_me();
+    my $err = $self->oauth2_api($back, "GET", $self->{ENDPOINT}, $two[0], $two[1]);
     $self->warn("{Oauth2}[EndPoint]{end}1:$err");
     return $err if $err;
   }
