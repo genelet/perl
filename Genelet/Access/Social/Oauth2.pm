@@ -38,7 +38,8 @@ sub handler {
 
 sub get_me {
   my $self = shift;
-  return ({access_token=>$self->{ACCESS_TOKEN}}, undef);
+  return (undef, {'Authorization'=> "Bearer ".$self->{ACCESS_TOKEN}});
+#  return ({access_token=>$self->{ACCESS_TOKEN}}, undef);
 }
 
 sub get_token_body {

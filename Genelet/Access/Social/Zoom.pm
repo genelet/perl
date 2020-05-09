@@ -18,11 +18,6 @@ __PACKAGE__->setup_accessors(
   endpoint         => "https://api.zoom.us/v2/users/me",
 );
 
-sub get_me {
-  my $self = shift;
-  return (undef, {'Authorization'=> "Bearer ".$self->{ACCESS_TOKEN}});
-}
-
 sub get_token_body {
   my $self = shift;
   my ($login, $redirect_uri, $state) = @_;
