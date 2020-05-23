@@ -242,9 +242,14 @@ sub handler {
 # uploads => {html_field => [args_field, upload_dir relative to doc root]}
 # in GO, html_field=args_field
     while (my ($field, $value) = each %{$actionHash->{upload}}) {
+      next unless $ARGS->{$field};
       my $field_new = shift @$value;
       my $dir = $self->{UPLOADDIR};
       $dir = $self->{DOCUMENT_ROOT}.shift(@$value) if ($value && @$value);
+      unless (-e $dir) {
+        my $ret = mkdir $dir;
+        return $! unless $ret;
+      }
       my $err = ($value) ? Genelet::Utils::upload_field($ARGS, $r, $field_new, $field, $dir, @$value) : Genelet::Utils::upload_field($ARGS, $r, $field_new, $field, $dir);
       return $self->error_page($filter, $ARGS, $err) if $err;
     }
