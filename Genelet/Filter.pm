@@ -57,8 +57,9 @@ sub send_blocks {
   my $self = shift;
   my ($lists, $other) = @_;
 
-  my $err;
+  return unless $self->{BLKS};
 
+  my $err;
   foreach my $gmail (keys %{$self->{BLKS}}) {
     my $hash = $self->{BLKS}->{$gmail};
     my $obj  = $other->{$gmail};

@@ -25,7 +25,7 @@ __PACKAGE__->setup_accessors(
   project       => '',
   uploaddir     => '',
   server_url    => '',
-  blks          => [],
+  blks          => undef,
   script        => '',
   pubrole       => '',
   comps         => [],
